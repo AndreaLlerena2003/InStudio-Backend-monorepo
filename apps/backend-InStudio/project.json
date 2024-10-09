@@ -1,0 +1,26 @@
+{
+  "name": "backend-InStudio",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/backend-InStudio/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "backend-InStudio:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "backend-InStudio:build:development"
+        },
+        "production": {
+          "buildTarget": "backend-InStudio:build:production"
+        }
+      }
+    }
+  }
+}
