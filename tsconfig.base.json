@@ -14,7 +14,14 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@backend-in-studio/mongoose-manager": [
+        "libs/mongoose-manager/src/index.ts"
+      ],
+      "@backend-in-studio/sequelize-manager": [
+        "libs/sequelize-manager/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

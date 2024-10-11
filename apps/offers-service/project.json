@@ -1,0 +1,26 @@
+{
+  "name": "offers-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/offers-service/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "offers-service:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "offers-service:build:development"
+        },
+        "production": {
+          "buildTarget": "offers-service:build:production"
+        }
+      }
+    }
+  }
+}
