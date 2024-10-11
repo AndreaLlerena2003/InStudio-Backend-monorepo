@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mongodb-booking-service:
+    image: docker.io/bitnami/mongodb:5.0  
+    environment:
+      - MONGODB_ROOT_PASSWORD=password123  
+    volumes:
+      - 'mongodb-booking-service_data:/bitnami/mongodb'  
+    ports:
+      - '27017:27017'  
+
+  mongodb-offers-service:
+    image: docker.io/bitnami/mongodb:5.0  
+    environment:
+      - MONGODB_ROOT_PASSWORD=password123
+    volumes:
+      - 'mongodb-offers-service_data:/bitnami/mongodb'  
+    ports:
+      - '27018:27017'  
+
+volumes:
+  mongodb-booking-service_data:
+    driver: local  
+  mongodb-offers-service_data:
+    driver: local  

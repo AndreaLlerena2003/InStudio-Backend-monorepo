@@ -1,0 +1,26 @@
+{
+  "name": "admin-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin-service/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "admin-service:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "admin-service:build:development"
+        },
+        "production": {
+          "buildTarget": "admin-service:build:production"
+        }
+      }
+    }
+  }
+}
