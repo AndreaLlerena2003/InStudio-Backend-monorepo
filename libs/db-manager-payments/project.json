@@ -1,0 +1,9 @@
+{
+  "name": "db-manager-payments",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/db-manager-payments/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project db-manager-payments --web",
+  "targets": {}
+}

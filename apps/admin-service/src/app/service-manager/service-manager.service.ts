@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Service , Salon, Subcategory} from '@backend-in-studio/sequelize-manager';
+import { Service , Salon, Subcategory} from '@backend-in-studio/db-manager-admin';
 import { CreateServiceDto } from './dto/create-service-dto'; 
 
 @Injectable()

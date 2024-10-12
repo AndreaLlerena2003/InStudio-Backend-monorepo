@@ -15,11 +15,23 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@backend-in-studio/db-manager-admin": [
+        "libs/db-manager-admin/src/index.ts"
+      ],
+      "@backend-in-studio/db-manager-analytics": [
+        "libs/db-manager-analytics/src/index.ts"
+      ],
+      "@backend-in-studio/db-manager-auth": [
+        "libs/db-manager-auth/src/index.ts"
+      ],
+      "@backend-in-studio/db-manager-payments": [
+        "libs/db-manager-payments/src/index.ts"
+      ],
+      "@backend-in-studio/db-manager-user": [
+        "libs/db-manager-user/src/index.ts"
+      ],
       "@backend-in-studio/mongoose-manager": [
         "libs/mongoose-manager/src/index.ts"
-      ],
-      "@backend-in-studio/sequelize-manager": [
-        "libs/sequelize-manager/src/index.ts"
       ]
     }
   },

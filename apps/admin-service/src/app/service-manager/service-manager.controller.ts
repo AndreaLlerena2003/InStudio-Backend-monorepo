@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { ServiceManagerService } from './service-manager.service';
 import { CreateServiceDto } from './dto/create-service-dto'; 
-import { Service } from '@backend-in-studio/sequelize-manager'; 
+import { Service } from '@backend-in-studio/db-manager-admin'; 
 
 @Controller('service-manager')
 export class ServiceManagerController {
