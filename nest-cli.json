@@ -4,9 +4,9 @@
       "type": "library",
       "root": "libs/common",
       "entryFile": "index",
-      "sourceRoot": "libs/sequilize-manager/src",
+      "sourceRoot": "libs/db-manager-admin/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/sequilize-manager/tsconfig.lib.json"
+        "tsConfigPath": "libs/db-manager-admin/tsconfig.lib.json"
       }
     }
   },
