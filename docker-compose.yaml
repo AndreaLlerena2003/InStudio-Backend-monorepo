@@ -52,17 +52,6 @@ services:
     ports:
       - '5634:5432'
 
-  analytics-service-4:
-    image: postgres:14
-    environment:
-      POSTGRES_DB: analytics-service
-      POSTGRES_USER: user4
-      POSTGRES_PASSWORD: password4
-    volumes:
-      - 'analytics-service-4_data:/var/lib/postgresql/data'
-    ports:
-      - '5635:5432'
-
   payments-service-5:
     image: postgres:14
     environment:
@@ -84,8 +73,6 @@ volumes:
   user-service-2_data:
     driver: local
   auth-service-3_data:
-    driver: local
-  analytics-service-4_data:
     driver: local
   payments-service-5_data:
     driver: local
