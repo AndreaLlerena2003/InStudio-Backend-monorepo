@@ -1,10 +1,10 @@
 export default {
-  displayName: 'db-manager-payments',
+  displayName: 'kafka-manager',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/db-manager-payments',
+  coverageDirectory: '../../coverage/libs/kafka-manager',
 };
