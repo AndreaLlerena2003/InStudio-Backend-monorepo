@@ -1,0 +1,9 @@
+{
+  "name": "kafka-manager",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/kafka-manager/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project kafka-manager --web",
+  "targets": {}
+}
