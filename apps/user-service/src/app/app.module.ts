@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserManagerModule } from './user-manager/user-manager.module';
 import { ConfigModule } from '@nestjs/config';
+import {KafkaManagerModule} from '@backend-in-studio/kafka-manager';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -11,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
       envFilePath: '.env', 
     }),
     DbManagerUserModule,
+    KafkaManagerModule,
     UserManagerModule],
   controllers: [AppController],
   providers: [AppService],
