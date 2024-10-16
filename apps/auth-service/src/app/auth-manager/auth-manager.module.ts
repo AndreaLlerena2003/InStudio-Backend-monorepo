@@ -20,7 +20,7 @@ import { KafkaManagerModule} from '@backend-in-studio/kafka-manager';
       inject: [ConfigService],
     }),
     SequelizeModule.forFeature([AuthTokens, AuthUsers]), 
-    KafkaManagerModule
+    KafkaManagerModule,
   ],
   providers: [AuthManagerService, JwtStrategy, LocalStrategy],
   controllers: [AuthManagerController]
