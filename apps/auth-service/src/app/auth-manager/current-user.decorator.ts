@@ -13,4 +13,4 @@ export const getCurrentUserByContext = (context: ExecutionContext): LoginUserDto
 export const CurrentUser = createParamDecorator(
   (_data: unknown, context: ExecutionContext) =>
     getCurrentUserByContext(context),
-); //Crea un decorador personalizado llamado CurrentUser que se puede usar en los controladores para obtener el usuario autenticado automáticamente.
+); 
