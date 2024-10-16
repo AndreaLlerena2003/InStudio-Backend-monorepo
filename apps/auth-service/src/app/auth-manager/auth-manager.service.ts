@@ -1,16 +1,14 @@
 import { InjectModel } from '@nestjs/sequelize';
 import { AuthUsers } from '@backend-in-studio/db-manager-auth';
 import { RegisterUserDto } from '../dto/register-user.dto';
-import { LoginUserDto } from '../dto/login-user.dto';
 import {
-    Inject,
     Injectable,
     UnauthorizedException,
     UnprocessableEntityException,
   } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import {JwtService} from '@nestjs/jwt';
-import { ClientKafka } from '@nestjs/microservices';
+
 export interface TokenPayload {
     userId: string;
 }
@@ -18,7 +16,7 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid'; 
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
-import { KAFKA_SERVICE } from '@backend-in-studio/kafka-manager';
+
 @Injectable()
 export class AuthManagerService {
     constructor(
