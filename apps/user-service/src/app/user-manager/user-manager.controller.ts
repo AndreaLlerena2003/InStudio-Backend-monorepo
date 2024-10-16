@@ -6,9 +6,10 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 @Controller('user-manager')
 export class UserManagerController {
     constructor (private readonly userManagerService: UserManagerService){
+        
     }
 
-    @EventPattern('user_registered')
+    @EventPattern('userRegistered')
     async create(@Payload() data: any): Promise<User>{
         try{
             return await this.userManagerService.handleUserRegistered(data);

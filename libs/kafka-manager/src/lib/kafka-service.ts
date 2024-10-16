@@ -1,10 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { KAFKA_BROKER } from './kafka-broker';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
 export class KafkaService {
   private producer: any;
   private logger = new Logger(KafkaService.name);
+
+  
   constructor() { }
   async init() {
     this.producer = KAFKA_BROKER.producer();

@@ -5,10 +5,14 @@ import { LoginUserDto } from '../dto/login-user.dto';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { Response } from 'express';
+import { AuthUsers } from '@backend-in-studio/db-manager-auth';
 
 @Controller('auth-manager')
 export class AuthManagerController {
-    constructor(private readonly authManagerService: AuthManagerService) {}
+    constructor(
+        
+        private readonly authManagerService: AuthManagerService
+    ) {}
 
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
@@ -20,9 +24,10 @@ export class AuthManagerController {
     @Post('login')
     @HttpCode(HttpStatus.OK)
     async login(
-        @CurrentUser() user: LoginUserDto,
+        @CurrentUser() user: AuthUsers,
         @Res({ passthrough: true }) response: Response,
     ) {
+  
         await this.authManagerService.login(user, response);
         response.send(user);
     }
