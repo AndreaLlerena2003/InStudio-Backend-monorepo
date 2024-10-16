@@ -1,1 +1,1 @@
-export * from './lib/kafka-manager.module';
+export * from './lib/kafkaManger.module';
