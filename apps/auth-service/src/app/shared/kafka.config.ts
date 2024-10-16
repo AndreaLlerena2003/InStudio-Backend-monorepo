@@ -4,11 +4,12 @@ export const kafkaConfig: KafkaOptions = {
   transport: Transport.KAFKA,
   options: {
     client: {
-      clientId: 'client',
+      clientId: 'client-auth-service',
       brokers: ['localhost:9092'],
     },
     consumer: {
-      groupId: 'banking-consumer-group',
+      groupId: 'banking-InStudio-auth-service',
+      allowAutoTopicCreation: true,
       sessionTimeout: 55000,
       heartbeatInterval: 3000,
       retry: {
