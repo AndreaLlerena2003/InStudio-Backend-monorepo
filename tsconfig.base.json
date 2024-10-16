@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@backend-in-studio/auth-lib": ["libs/auth-lib/src/index.ts"],
       "@backend-in-studio/db-manager-admin": [
         "libs/db-manager-admin/src/index.ts"
       ],
@@ -30,6 +31,7 @@
       "@backend-in-studio/db-manager-user": [
         "libs/db-manager-user/src/index.ts"
       ],
+      "@backend-in-studio/kafka-manager": ["libs/kafka-manager/src/index.ts"],
       "@backend-in-studio/mongoose-manager": [
         "libs/mongoose-manager/src/index.ts"
       ]
