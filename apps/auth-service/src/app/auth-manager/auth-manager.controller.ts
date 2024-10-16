@@ -10,7 +10,7 @@ import { AuthUsers } from '@backend-in-studio/db-manager-auth';
 @Controller('auth-manager')
 export class AuthManagerController {
     constructor(
-        
+
         private readonly authManagerService: AuthManagerService
     ) {}
 
@@ -21,7 +21,7 @@ export class AuthManagerController {
     }
 
     @UseGuards(LocalAuthGuard)
-    @Post('login')
+    @Post('login-user')
     @HttpCode(HttpStatus.OK)
     async login(
         @CurrentUser() user: AuthUsers,
