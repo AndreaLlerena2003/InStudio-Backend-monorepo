@@ -26,8 +26,6 @@ export class UserManagerController {
     @Get('get-user-data')
     async getUserData(@Req() req: any): Promise<User> {
     const externalId = req.user?.user_id;
-    this.logger.log('AuthUsers instance: ', JSON.stringify(req.user, null, 2));
-    this.logger.log(externalId);
     try {
       return await this.userManagerService.getUserData(externalId);
     } catch (error) {
