@@ -21,7 +21,7 @@ export class DbManagerUserModule implements OnModuleInit {
   async onModuleInit() {
     this.defineRelationships();
     try {
-      await this.sequelize.sync({ force: true });
+      await this.sequelize.sync({ force: false });
       console.log('Tables synchronized successfully.');
     } catch (error) {
       console.error('Error synchronizing tables:', error);
