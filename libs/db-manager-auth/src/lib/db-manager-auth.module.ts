@@ -18,7 +18,7 @@ export class DbManagerAuthModule implements OnModuleInit {
 
   async onModuleInit() {
     this.defineRelationships();
-    await this.sequelize.sync({ force: true });
+    await this.sequelize.sync({ force: false });
     console.log('Tables synchronized successfully.');
   }
 
