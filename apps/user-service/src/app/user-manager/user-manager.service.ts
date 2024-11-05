@@ -46,7 +46,6 @@ export class UserManagerService {
     
 
     async getUserData(authentication: string) {
-        this.logger.log(`Authentication Data: ${JSON.stringify(authentication, null, 2)}`);
         try {
             const user = await this.userService.findByPk(authentication);
             if (user) {
