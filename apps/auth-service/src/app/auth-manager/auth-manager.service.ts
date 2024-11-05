@@ -52,7 +52,6 @@ export class AuthManagerService {
             userId: newUser.external_id
         };
     }
-    
     async login(user: AuthUsers, response: Response){
         const tokenPayload: TokenPayload = {
             userId: user.external_id,
@@ -114,7 +113,26 @@ export class AuthManagerService {
         
         return user;    
     }
-    
+
+
+    async validateUserByToken(data: { Authentication: string }) {
+        const { Authentication } = data;
+        let payload: TokenPayload;
+        try {
+            payload = this.jwtService.verify(Authentication);
+        } catch (error) {
+            throw new UnauthorizedException('Invalid token');
+        }
+        const { userId } = payload;
+        if (!userId) {
+            throw new UnauthorizedException('Invalid token payload');
+        }
+        const user = await this.getUser(userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        return {user_id:userId}; 
+    }
 }
 
 

@@ -5,14 +5,15 @@ import {
     Injectable,
     UnauthorizedException,
   } from '@nestjs/common';
-  import { ClientProxy } from '@nestjs/microservices';
+  import { ClientKafka } from '@nestjs/microservices';
   import { catchError, Observable, tap } from 'rxjs';
   
 import { firstValueFrom } from 'rxjs'; 
+
   
   @Injectable()
   export class JwtAuthGuard implements CanActivate {
-    constructor(@Inject('BACKEND_IN_STUDIO') private readonly kafkaClient: ClientProxy) {}
+    constructor(@Inject('auth-client') private readonly kafkaClient: ClientKafka) {}
   
     async canActivate(
       context: ExecutionContext,
@@ -23,6 +24,7 @@ import { firstValueFrom } from 'rxjs';
           this.kafkaClient.send('validate_user', { Authentication: authentication }),
         );
         this.addUser(user, context);
+        const externalId = user?.external_id; 
         return true;
       } catch {
         throw new UnauthorizedException(); 
@@ -48,6 +50,18 @@ import { firstValueFrom } from 'rxjs';
         context.switchToRpc().getData().user = user;
       } else if (context.getType() === 'http') {
         context.switchToHttp().getRequest().user = user;
+      }
+    }
+
+    async onModuleInit() {
+      console.log('Connecting to Kafka...');
+      try {
+          console.log('Iniciando');
+          await this.kafkaClient.subscribeToResponseOf('validate_user');
+          await this.kafkaClient.subscribeToResponseOf('validate_user.reply');
+          console.log('Connected to Kafka');
+      } catch (error) {
+          console.error('Failed to connect to Kafka', error);
       }
     }
 
