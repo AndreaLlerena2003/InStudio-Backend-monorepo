@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '@backend-in-studio/db-manager-user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 @Injectable()
 export class UserManagerService {
+    private readonly logger = new Logger();
     constructor(
         @InjectModel(User)
         private readonly userService: typeof User,
@@ -33,6 +34,35 @@ export class UserManagerService {
             profile_photo_url,
             districtId
         };
-        return await this.createUser(createUserDto);
+        try {
+            const result = await this.createUser(createUserDto);
+            this.logger.log("User successfully created");
+            return result;
+        } catch (error) {
+            this.logger.error("Error creating user:", error);
+            throw new InternalServerErrorException("Error creating user");
+        }
+    }
+    
+
+    async getUserData(authentication: string) {
+        this.logger.log(`Authentication Data: ${JSON.stringify(authentication, null, 2)}`);
+        try {
+            const user = await this.userService.findByPk(authentication);
+            if (user) {
+                this.logger.log(`User Found: ${JSON.stringify(user, null, 2)}`);
+            } else {
+                this.logger.warn(`No user found for authentication: ${authentication}`);
+            }
+            return user;
+        } catch (error) {
+            this.logger.error('Error fetching user data', {
+                message: error.message,
+                stack: error.stack,
+                details: error,
+            });
+    
+            throw new Error('Esto es una pruebita');
+        }
     }
 }
