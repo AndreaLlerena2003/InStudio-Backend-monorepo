@@ -1,0 +1,9 @@
+{
+  "name": "lambda-manager-analytics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/lambda-manager-analytics/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project lambda-manager-analytics --web",
+  "targets": {}
+}
