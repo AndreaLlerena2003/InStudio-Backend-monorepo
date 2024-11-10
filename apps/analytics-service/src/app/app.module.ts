@@ -3,14 +3,16 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AnalyticsManagerModule } from './analytics-manager/analytics-manager.module';
-import { DbManagerAnalyticsModule } from '@backend-in-studio/db-manager-analytics';
+import { LambdaManagerAnalyticsModule } from '@backend-in-studio/lambda-manager-analytics'
+// import { DbManagerAnalyticsModule } from '@backend-in-studio/db-manager-analytics';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, 
       envFilePath: '.env', 
     }),
-    DbManagerAnalyticsModule,
+    // DbManagerAnalyticsModule,
+    LambdaManagerAnalyticsModule,
     AnalyticsManagerModule],
   controllers: [AppController],
   providers: [AppService],
