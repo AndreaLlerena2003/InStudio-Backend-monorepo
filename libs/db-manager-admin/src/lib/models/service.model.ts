@@ -19,5 +19,11 @@ export class Service extends Model<Service> {
     allowNull: false,
   })
   declare price: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare photo: string;
   
 }

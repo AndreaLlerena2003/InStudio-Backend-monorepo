@@ -5,12 +5,14 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import {User,City,District,Region} from '@backend-in-studio/db-manager-user';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import {AuthLibModule} from '@backend-in-studio/auth-lib';
+import {S3ManagerModule} from '@backend-in-studio/s3-manager';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 @Module({
   imports: [
     SequelizeModule.forFeature([User,City,District,Region]), 
     KafkaManagerModule,
+    S3ManagerModule,
     AuthLibModule,
     ClientsModule.register([
       {
