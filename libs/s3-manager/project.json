@@ -1,0 +1,9 @@
+{
+  "name": "s3-manager",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/s3-manager/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project s3-manager --web",
+  "targets": {}
+}
