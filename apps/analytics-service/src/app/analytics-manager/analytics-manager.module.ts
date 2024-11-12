@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AnalyticsManagerController } from './analytics-manager.controller';
 import { AnalyticsManagerService } from './analytics-manager.service';
-import {Analytics} from '@backend-in-studio/db-manager-analytics';
-import { Booking_Status } from '@backend-in-studio/db-manager-analytics';
-import { SequelizeModule } from '@nestjs/sequelize';
-
+import { LambdaManagerAnalyticsModule } from '@backend-in-studio/lambda-manager-analytics';
+import {S3ManagerModule} from '@backend-in-studio/s3-manager';
 @Module({
   imports: [
-    SequelizeModule.forFeature([Analytics,Booking_Status]), 
+    LambdaManagerAnalyticsModule,
+    S3ManagerModule
   ],
   controllers: [AnalyticsManagerController],
   providers: [AnalyticsManagerService]
