@@ -14,15 +14,15 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     KafkaManagerModule,
     ClientsModule.register([
       {
-        name: 'auth-client',
+        name: 'notification-client',
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'client-notification-service',
+            clientId: process.env.KAFKA_CLIENT_ID,
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'backend-InStudio-auth-service',
+            groupId: process.env.KAFKA_GROUP_ID,
             allowAutoTopicCreation: true,
           },
         },
