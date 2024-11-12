@@ -24,7 +24,7 @@ export class AnalyticsManagerController {
     };
   }
 
-  @Get('/data')
+  @Post('/data')
   async getData(@Body() metricDto: MetricsDto) {
     const result = await this.analyticsManagerService.getData(metricDto);
     return {
