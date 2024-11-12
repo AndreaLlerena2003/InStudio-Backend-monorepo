@@ -29,7 +29,16 @@ npx nx build backend-InStudio
 ```
 ### Iniciar por servicios
 
+Para iniciar por servicio la estructura es:
+
+```sh
+nx serve <nombre-del-servicio>
+```
+
+Como por ejemplo:
+
 Iniciar el servicio de autenticación
+
 ```sh
 nx serve auth-service
 ```
