@@ -10,12 +10,6 @@ import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
 export class AdminManagerService {
   private readonly logger = new Logger();
   constructor(
-    @InjectModel(Service)
-    private readonly serviceService: typeof Service,
-    @InjectModel(Subcategory)
-    private readonly subcategoryService: typeof Subcategory,
-    @InjectModel(Salon)
-    private readonly salonService: typeof Salon,
     @InjectModel(Admin)
     private readonly adminService: typeof Admin,
     private readonly kafkaService: KafkaService,
