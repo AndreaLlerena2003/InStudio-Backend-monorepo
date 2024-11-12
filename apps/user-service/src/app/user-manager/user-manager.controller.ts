@@ -27,7 +27,7 @@ export class UserManagerController {
     @UseGuards(JwtAuthGuard)
     @Get('get-user-data')
     async getUserData(@Req() req: any): Promise<User> {
-    const externalId = req.user?.user_id;
+    const externalId = req.user?.userId;
     try {
       return await this.userManagerService.getUserData(externalId);
     } catch (error) {
@@ -47,7 +47,7 @@ export class UserManagerController {
   @UseGuards(JwtAuthGuard)
   @Patch('update-user-name')
   async updateUserName(@Req() req: any,  @Body('name') name: string) {
-    const userId = req.user?.user_id;
+    const userId = req.user?.userId;
     if (!name) {
       throw new BadRequestException('Name is required');
     }
@@ -66,7 +66,7 @@ export class UserManagerController {
   @UseInterceptors(FileInterceptor('file'))
   async updateUserProfilePhoto(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
     console.log('File received:', file); 
-    const userId = req.user?.user_id;
+    const userId = req.user?.userId;
 
     if (!file) {
       throw new BadRequestException('Profile photo file is required');
