@@ -1,0 +1,97 @@
+import { Schema } from 'dynamoose';
+import { Item } from 'dynamoose/dist/Item';
+
+// Clase que extiende Item para el modelo
+export class Notification extends Item {
+  UserID_TypeBehavior_BeautySalonID!: string;
+  Timestamp!: string;
+  Email!: string;
+  TypeBehavior!: 'Subscription' | 'Reminder' | 'Offer';
+  BeautySalonID!: string;
+  Active!: boolean;
+  Status!: 'Pendiente' | 'Enviado' | 'Error';
+  Date?: string;
+  Time?: string;
+  Service?: string;
+  ReminderID?: string;
+  OfferID?: string;
+  Description?: string;
+}
+
+// Schema para Dynamoose
+export const NotificationSchema = new Schema(
+  {
+    // Clave primaria compuesta
+    UserID_TypeBehavior_BeautySalonID: {
+      type: String,
+      hashKey: true, // Partition key
+      required: true
+    },
+    Timestamp: {
+      type: String,
+      rangeKey: true, // Sort key
+      required: true
+    },
+
+    // Atributos requeridos
+    Email: {
+      type: String,
+      required: true
+    },
+    TypeBehavior: {
+      type: String,
+      enum: ['Subscription', 'Reminder', 'Offer'],
+      required: true
+    },
+    BeautySalonID: {
+      type: String,
+      required: true,
+      index: {
+        name: 'TypeBehavior-BeautySalonID-index',
+        rangeKey: 'BeautySalonID',
+        project: true // Proyectar todos los atributos
+      }
+    },
+    Active: {
+      type: Boolean,
+      required: true,
+      default: true
+    },
+    Status: {
+      type: String,
+      enum: ['Pendiente', 'Enviado', 'Error'],
+      required: true,
+      default: 'Pendiente'
+    },
+
+    // Atributos opcionales
+    Date: {
+      type: String,
+      required: false
+    },
+    Time: {
+      type: String,
+      required: false
+    },
+    Service: {
+      type: String,
+      required: false
+    },
+    ReminderID: {
+      type: String,
+      required: false
+    },
+    OfferID: {
+      type: String,
+      required: false
+    },
+    Description: {
+      type: String,
+      required: false
+    }
+  },
+  {
+    saveUnknown: false, // No permitir atributos desconocidos
+    timestamps: false  // No usar timestamps automáticos
+  }
+);
