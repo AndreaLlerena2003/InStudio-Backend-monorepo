@@ -4,7 +4,7 @@ Para correr el backend es necesario tener instalado Node, Docker y NX
 
 > **Nota:** Recuerda que se deben de colocar las variables de entorno correspondientes a los servicios de Amazon Web Services para el correcto funcionamiento. No están incluidas en el repositorio debido al público acceso
 
-## Inicialiar Kafka
+## Inicializar Kafka
 
 Para permitir la comunicación de los servicios por medio de Kafka se debe usar:
 
