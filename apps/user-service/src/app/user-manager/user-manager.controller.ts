@@ -1,9 +1,11 @@
-import { Controller, Post, Body, HttpException, HttpStatus, Get,Req, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Post, Body, UploadedFile, UseInterceptors, HttpException, BadRequestException ,HttpStatus, Get,Req, UseGuards, Logger, Patch } from '@nestjs/common';
 import { UserManagerService } from './user-manager.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '@backend-in-studio/db-manager-user';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import {JwtAuthGuard} from '@backend-in-studio/auth-lib';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 @Controller('user-manager')
 export class UserManagerController {
     private readonly logger = new Logger();
@@ -25,7 +27,7 @@ export class UserManagerController {
     @UseGuards(JwtAuthGuard)
     @Get('get-user-data')
     async getUserData(@Req() req: any): Promise<User> {
-    const externalId = req.user?.user_id;
+    const externalId = req.user?.userId;
     try {
       return await this.userManagerService.getUserData(externalId);
     } catch (error) {
@@ -38,6 +40,49 @@ export class UserManagerController {
         details: error
       }, null, 2));
 
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-user-name')
+  async updateUserName(@Req() req: any,  @Body('name') name: string) {
+    const userId = req.user?.userId;
+    if (!name) {
+      throw new BadRequestException('Name is required');
+    }
+    try {
+        await this.userManagerService.updateUserName(userId, name);
+      } catch (error) {
+      if (error instanceof HttpException) {
+          throw error;
+      }
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-user-photo')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateUserProfilePhoto(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    console.log('File received:', file); 
+    const userId = req.user?.userId;
+
+    if (!file) {
+      throw new BadRequestException('Profile photo file is required');
+    }
+
+    try {
+      const updatedPhotoInfo = await this.userManagerService.updateUserProfilePhoto(userId, file);
+      
+      return {
+        message: 'Profile photo updated successfully',
+        photoInfo: updatedPhotoInfo, 
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
