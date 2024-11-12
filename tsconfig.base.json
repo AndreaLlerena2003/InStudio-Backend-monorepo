@@ -37,7 +37,8 @@
       ],
       "@backend-in-studio/mongoose-manager": [
         "libs/mongoose-manager/src/index.ts"
-      ]
+      ],
+      "@backend-in-studio/s3-manager": ["libs/s3-manager/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
