@@ -1,10 +1,11 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { S3Client, PutObjectCommand,  DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand,  DeleteObjectCommand, HeadObjectCommand, GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import * as multer from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
+import { Readable } from 'stream';
 
 @Injectable()
 export class S3Service {
@@ -71,4 +72,47 @@ export class S3Service {
         }
     }
 
+    async getFile(fileKey: string): Promise<Buffer> {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: fileKey,
+            });
+
+            const { Body } = await this.s3Client.send(command);
+
+            if (Body instanceof Readable) {
+                const chunks = [];
+                for await (const chunk of Body) {
+                    chunks.push(chunk);
+                }
+                const fileBuffer = Buffer.concat(chunks);
+                this.logger.log(`File retrieved successfully from S3: ${fileKey}`);
+                return fileBuffer;
+            } else {
+                throw new InternalServerErrorException('Failed to read file data from S3');
+            }
+        } catch (error) {
+            this.logger.error(`Error retrieving file from S3: ${error}`);
+            throw new InternalServerErrorException('Failed to retrieve file from S3');
+        }
+    }
+
+    async listFiles(folderPath: string = ''): Promise<string[]> {
+        try {
+            const command = new ListObjectsV2Command({
+                Bucket: this.bucketName,
+                Prefix: folderPath,
+            });
+    
+            const { Contents } = await this.s3Client.send(command);
+            const fileKeys = Contents ? Contents.map(item => item.Key).filter((key): key is string => key !== undefined) : [];
+    
+            this.logger.log(`Files retrieved successfully from S3 bucket: ${fileKeys.length} files found.`);
+            return fileKeys;
+        } catch (error) {
+            this.logger.error(`Error listing files from S3: ${error}`);
+            throw new InternalServerErrorException('Failed to list files from S3');
+        }
+    }
 }
