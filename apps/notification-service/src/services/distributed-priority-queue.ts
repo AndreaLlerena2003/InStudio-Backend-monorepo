@@ -8,6 +8,7 @@ import {
     SendMessageCommandOutput
 } from "@aws-sdk/client-sqs";
 import * as dotenv from 'dotenv';
+import { Logger } from '@nestjs/common'; 
 
 dotenv.config();
 
@@ -44,7 +45,7 @@ export class DistributedPriorityQueue {
         try {
             const queueUrl = this.getQueueUrl(priorityLevel);
             if (!queueUrl) {
-                console.log(`❌ URL de cola no encontrada para prioridad '${priorityLevel}'`);
+                Logger.log(`❌ URL de cola no encontrada para prioridad '${priorityLevel}'`);
                 throw new Error(`URL no encontrada para prioridad ${priorityLevel}`);
             }
 
@@ -63,7 +64,7 @@ export class DistributedPriorityQueue {
             const response = await this.sqs.send(command);
             return response;
         } catch (e) {
-            console.log(`Error enviando mensaje a SQS: ${e}`);
+            Logger.log(`Error enviando mensaje a SQS: ${e}`);
             throw e;
         }
     }
@@ -95,11 +96,11 @@ export class DistributedPriorityQueue {
                     return { priorityLevel, data: body.data as Record<string, unknown> };
                 }
             } catch (e) {
-                console.log(`Error recibiendo mensaje de SQS: ${e}`);
+                Logger.log(`Error recibiendo mensaje de SQS: ${e}`);
                 continue; // Intentar con la siguiente cola
             }
         }
-        console.log("❌ No se encontraron mensajes en ninguna cola.");
+        Logger.log("❌ No se encontraron mensajes en ninguna cola.");
         return null;
     }
 
@@ -117,7 +118,7 @@ export class DistributedPriorityQueue {
                 const numMessages = parseInt(data.Attributes.ApproximateNumberOfMessages, 10);
                 totalMessages += numMessages;
             } catch (e) {
-                console.log(`Error comprobando estado de la cola ${priorityLevel}: ${e}`);
+                Logger.log(`Error comprobando estado de la cola ${priorityLevel}: ${e}`);
             }
         }
         return totalMessages === 0;
@@ -131,12 +132,12 @@ export class DistributedPriorityQueue {
                     QueueUrl: queueUrl
                 });
                 await this.sqs.send(command);
-                console.log(`✅ Cola SQS '${priorityLevel}' purgada exitosamente.`);
+                Logger.log(`✅ Cola SQS '${priorityLevel}' purgada exitosamente.`);
 
                 // Pequeño delay entre purgas
                 await new Promise((resolve) => setTimeout(resolve, 1000));
             } catch (err) {
-                console.log(`Error purgando la cola SQS '${priorityLevel}': ${err}`);
+                Logger.log(`Error purgando la cola SQS '${priorityLevel}': ${err}`);
             }
         }
     }
