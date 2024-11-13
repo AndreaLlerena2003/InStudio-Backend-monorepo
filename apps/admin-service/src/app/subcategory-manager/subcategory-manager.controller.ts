@@ -3,12 +3,12 @@ import { CreateSubcategoryDto } from '../dto/create-subcategory-dto';
 import { SubcategoryManagerService } from './subcategory-manager.service';
 import { Subcategory } from '@backend-in-studio/db-manager-admin';
 
-@Controller('salon-manager')
+@Controller('subcategory-manager')
 export class SubcategoryManagerController {
   private readonly logger = new Logger();
   constructor(private readonly subcategoryManagerService: SubcategoryManagerService) {}
 
-  @Post()
+  @Post('create-subcategory')
   async createSubcategory(@Body() createSubcategoryDto: CreateSubcategoryDto): Promise<Subcategory> {
     try {
       const newSubcategory = await this.subcategoryManagerService.createSubcategory(createSubcategoryDto);

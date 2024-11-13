@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty } from 'class-validator';
 
-export class CreateSubcategoryDto {
+export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
   readonly name: string;
@@ -8,6 +8,4 @@ export class CreateSubcategoryDto {
   @IsString()
   @IsNotEmpty()
   readonly description: string;
-
-  //agregar category id
 }
