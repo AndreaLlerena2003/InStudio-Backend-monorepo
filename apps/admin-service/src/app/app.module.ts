@@ -3,7 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {DbManagerModuleAdmin} from '@backend-in-studio/db-manager-admin';
 import { ConfigModule } from '@nestjs/config';
-import { ServiceManagerModule } from './service-manager/service-manager.module';
+import { AdminManagerModule } from './admin-manager/admin-manager.module';
+import {KafkaManagerModule} from '@backend-in-studio/kafka-manager';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -11,7 +12,8 @@ import { ServiceManagerModule } from './service-manager/service-manager.module';
       envFilePath: '.env', 
     }),
     DbManagerModuleAdmin,
-    ServiceManagerModule],
+    KafkaManagerModule,
+    AdminManagerModule],
   controllers: [AppController],
   providers: [AppService],
 })

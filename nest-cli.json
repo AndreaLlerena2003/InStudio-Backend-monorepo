@@ -8,6 +8,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/db-manager-admin/tsconfig.lib.json"
       }
+    },
+    "lambda-manager-analytics": {
+      "type": "library",
+      "root": "libs/lambda-manager-analytics",
+      "entryFile": "index",
+      "sourceRoot": "libs/lambda-manager-analytics/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/lambda-manager-analytics/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {
