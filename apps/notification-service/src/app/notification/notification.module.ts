@@ -5,13 +5,15 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { NotificationRepository } from './notification.repository';
+import { NotificationManager } from '../../services/notification-manager';
 import { PriorityNotificationManager } from '../../services/priority-notification-manager';
 import { DynamooseManagerModule } from '@backend-in-studio/dynamoose-manager';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule,
     DynamooseManagerModule,
     KafkaManagerModule,
     ScheduleModule.forRoot(),
@@ -35,9 +37,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
   providers: [
     NotificationService,
     NotificationRepository,
-    PriorityNotificationManager
+    PriorityNotificationManager,
+    NotificationManager
   ],
-  exports: [NotificationService,
+  exports: [
+    NotificationService,
     NotificationRepository
   ]
 })
