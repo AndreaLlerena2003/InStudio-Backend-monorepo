@@ -32,12 +32,16 @@
         "libs/db-manager-user/src/index.ts"
       ],
       "@backend-in-studio/kafka-manager": ["libs/kafka-manager/src/index.ts"],
+      "@backend-in-studio/lambda-manager-analytics": [
+        "libs/lambda-manager-analytics/src/index.ts"
+      ],
       "@backend-in-studio/mongoose-manager": [
         "libs/mongoose-manager/src/index.ts"
       ],
       "@backend-in-studio/dynamoose-manager": [
         "libs/dynamoose-manager/src/index.ts"
-      ]
+      ],
+      "@backend-in-studio/s3-manager": ["libs/s3-manager/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

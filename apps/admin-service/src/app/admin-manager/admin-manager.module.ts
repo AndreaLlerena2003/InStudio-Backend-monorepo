@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { UserManagerService } from './user-manager.service';
-import { UserManagerController } from './user-manager.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-import {User,City,District,Region} from '@backend-in-studio/db-manager-user';
+import { AdminManagerService } from './admin-manager.service';
+import { AdminManagerController } from './admin-manager.controller';
+import { Service, Salon, Subcategory , Admin} from '@backend-in-studio/db-manager-admin'
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import {AuthLibModule} from '@backend-in-studio/auth-lib';
 import {S3ManagerModule} from '@backend-in-studio/s3-manager';
@@ -10,7 +10,7 @@ import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 @Module({
   imports: [
-    SequelizeModule.forFeature([User,City,District,Region]), 
+    SequelizeModule.forFeature([Service, Salon, Subcategory, Admin]), 
     KafkaManagerModule,
     S3ManagerModule,
     AuthLibModule,
@@ -20,7 +20,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'client-user-service',
+            clientId: 'client-admin-service',
             brokers: ['localhost:9092'],
           },
           consumer: {
@@ -30,7 +30,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       }])
   ],
-  providers: [UserManagerService, JwtAuthGuard],
-  controllers: [UserManagerController]
+  controllers: [AdminManagerController],
+  providers: [AdminManagerService,  JwtAuthGuard],
 })
-export class UserManagerModule {}
+export class AdminManagerModule {}
