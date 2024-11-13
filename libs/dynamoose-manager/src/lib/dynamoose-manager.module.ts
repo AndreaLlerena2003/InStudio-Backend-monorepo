@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { DynamooseModule } from 'nestjs-dynamoose';
 import { NotificationSchema } from './models/notification.model';
@@ -7,15 +7,22 @@ import { NotificationSchema } from './models/notification.model';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      
     }),
     DynamooseModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        Logger.log('Cargando configuración AWS...');
+        Logger.log('ACCESS_KEY_ID encontrado:', !!configService.get('ACCESS_KEY_ID'));
+      
+       return {
         aws: {
           accessKeyId: configService.get<string>('ACCESS_KEY_ID'),
           secretAccessKey: configService.get<string>('SECRET_ACCESS_KEY'),
           region: configService.get<string>('AWS_REGION') || 'us-east-2',
         },
-      }),
+      };
+      },
       inject: [ConfigService],
     }),
     DynamooseModule.forFeature([

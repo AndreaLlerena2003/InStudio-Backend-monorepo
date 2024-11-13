@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Logger } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
 
@@ -15,6 +15,7 @@ export class NotificationController {
     timeStr: string,
     service: string
   }) {
+    Logger.log('Reservation created', JSON.stringify(data));
     return await this.notificationService.handleReminder(data);
   }
 
@@ -26,6 +27,7 @@ export class NotificationController {
     offerId: string,
     description: string
   }) {
+    Logger.log('Notification created', JSON.stringify(data));
     return await this.notificationService.handleOffer(data);
   }
 

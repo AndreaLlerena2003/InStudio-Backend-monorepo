@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SNSClient, SubscribeCommand, PublishCommand } from "@aws-sdk/client-sns";
 import * as dotenv from 'dotenv';
 import { NotificationRepository } from '../app/notification/notification.repository'; // Removido INotification
@@ -52,9 +52,9 @@ export class NotificationManager {
       notificationDto.reminderId = reminder_id;
 
       await this.notificationRepository.create(notificationDto);
-      console.log("Notification updated successfully.");
+      Logger.log("Notification updated successfully.");
     } catch (error) {
-      console.log(`Error updating notification: ${error}`);
+      Logger.log(`Error updating notification: ${error}`);
       throw error;
     }
   }
@@ -95,13 +95,13 @@ export class NotificationManager {
             const response = await this.sns_client.send(command);
             // Actualizar el estado a 'Enviado' después de enviar la notificación
             await this.updateNotificationStatus(user_id, 'Offer', beauty_salon_id, 'Enviado');
-            console.log(`Offer notification sent to ${user_id} and status updated.`);
+            Logger.log(`Offer notification sent to ${user_id} and status updated.`);
             return response;
         } catch (error) {
             attempt += 1;
-            console.log(`❌ Error enviando oferta (Intento ${attempt}/${max_retries}): ${error}`);
+            Logger.log(`❌ Error enviando oferta (Intento ${attempt}/${max_retries}): ${error}`);
             if (attempt < max_retries) {
-                console.log(`🔄 Volviendo a intentar en ${retry_delay} segundos...`);
+                Logger.log(`🔄 Volviendo a intentar en ${retry_delay} segundos...`);
                 await new Promise(resolve => setTimeout(resolve, retry_delay * 1000));
             } else {
                 // Actualizar el estado a 'Error' si hubo una excepción
@@ -118,10 +118,10 @@ export class NotificationManager {
     let attempt = 0;
     while (attempt < max_retries) {
         try {
-            console.log(`\n📤 Enviando recordatorio a ${email}:`);
-            console.log(`- Salón: ${beauty_salon_id}`);
-            console.log(`- Fecha: ${date}`);
-            console.log(`- Hora: ${time_str}`);
+            Logger.log(`\n📤 Enviando recordatorio a ${email}:`);
+            Logger.log(`- Salón: ${beauty_salon_id}`);
+            Logger.log(`- Fecha: ${date}`);
+            Logger.log(`- Hora: ${time_str}`);
             
             const subject = "Appointment Reminder";
             const body = `Hello ${user_id},\n\nThis is a reminder for your appointment at beauty salon ${beauty_salon_id} on ${date} at ${time_str} for ${service}.`;
@@ -138,21 +138,21 @@ export class NotificationManager {
                 }
             });
             const response = await this.sns_client.send(command);
-            console.log("✅ Notificación SNS enviada exitosamente");
-            console.log(`- MessageId: ${response.MessageId}`);
+            Logger.log("✅ Notificación SNS enviada exitosamente");
+            Logger.log(`- MessageId: ${response.MessageId}`);
             
-            console.log("\n🔄 Actualizando estado en DynamoDB...");
+            Logger.log("\n🔄 Actualizando estado en DynamoDB...");
             await this.updateNotificationStatus(user_id, 'Reminder', beauty_salon_id, 'Enviado');
             
             return response;
         } catch (error) {
             attempt += 1;
-            console.log(`❌ Error enviando recordatorio (Intento ${attempt}/${max_retries}): ${error}`);
+            Logger.log(`❌ Error enviando recordatorio (Intento ${attempt}/${max_retries}): ${error}`);
             if (attempt < max_retries) {
-                console.log(`🔄 Volviendo a intentar en ${retry_delay} segundos...`);
+                Logger.log(`🔄 Volviendo a intentar en ${retry_delay} segundos...`);
                 await new Promise(resolve => setTimeout(resolve, retry_delay * 1000));
             } else {
-                console.log("❌ Se alcanzó el número máximo de reintentos para enviar el recordatorio.");
+                Logger.log("❌ Se alcanzó el número máximo de reintentos para enviar el recordatorio.");
                 await this.updateNotificationStatus(user_id, 'Reminder', beauty_salon_id, 'Error');
                 return {"status": "error", "message": error.message};
             }
@@ -163,9 +163,9 @@ export class NotificationManager {
   async updateNotificationStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pendiente' | 'Enviado' | 'Error') {
     try {
       await this.notificationRepository.updateStatus(user_id, type_to_behavior, beauty_salon_id, status);
-      console.log(`✅ Estado actualizado exitosamente a '${status}'`);
+      Logger.log(`✅ Estado actualizado exitosamente a '${status}'`);
     } catch (error) {
-      console.log(`❌ Error actualizando estado: ${error}`);
+      Logger.log(`❌ Error actualizando estado: ${error}`);
       throw error;
     }
   }
@@ -211,10 +211,10 @@ export class NotificationManager {
     try {
       const notifications = await this.notificationRepository.getRecentNotifications(type_behavior, beauty_salon_id);
 
-      console.log(`Encontradas ${notifications.length} notificaciones pendientes de tipo ${type_behavior}`);
+      Logger.log(`Encontradas ${notifications.length} notificaciones pendientes de tipo ${type_behavior}`);
       return notifications;
     } catch (error) {
-      console.log(`Error getting recent notifications: ${error}`);
+      Logger.log(`Error getting recent notifications: ${error}`);
       return [];
     }
   }
@@ -224,7 +224,7 @@ export class NotificationManager {
       const user_id = await this.notificationRepository.getUserIdByEmail(email);
       return user_id;
     } catch (error) {
-      console.log(`Error getting user_id for email ${email}: ${error}`);
+      Logger.log(`Error getting user_id for email ${email}: ${error}`);
       return null;
     }
   }

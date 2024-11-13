@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { NotificationRepository } from './notification.repository';
@@ -12,6 +14,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ConfigModule.forRoot(),
     DynamooseManagerModule,
     KafkaManagerModule,
+    ScheduleModule.forRoot(),
     ClientsModule.register([
       {
         name: 'notification-client',

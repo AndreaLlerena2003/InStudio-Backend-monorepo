@@ -47,11 +47,11 @@ async function createNotificationTable() {
 
   try {
     const result = await dynamodb.createTable(params).promise();
-    console.log('Tabla creada exitosamente:', result);
+    Logger.log('Tabla creada exitosamente:', result);
     return result;
   } catch (error) {
     if (error.code === 'ResourceInUseException') {
-      console.log('La tabla ya existe');
+      Logger.log('La tabla ya existe');
     } else {
       console.error('Error creando la tabla:', error);
       throw error;
