@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { SalonManagerController } from './salon-manager.controller';
-import { SalonManagerService } from './salon-manager.service';
+import { SubcategoryManagerService } from './subcategory-manager.service';
+import { SubcategoryManagerController } from './subcategory-manager.controller';
 import { Service, Salon, Subcategory , Admin} from '@backend-in-studio/db-manager-admin'
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import {AuthLibModule} from '@backend-in-studio/auth-lib';
@@ -30,7 +30,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       }])
   ],
-  controllers: [SalonManagerController],
-  providers: [SalonManagerController,  JwtAuthGuard],
+  controllers: [SubcategoryManagerController],
+  providers: [SubcategoryManagerController,  JwtAuthGuard],
 })
-export class SalonManagerModule {}
+export class SubcategoryManagerModule {}
