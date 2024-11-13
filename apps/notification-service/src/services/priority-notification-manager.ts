@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { NotificationManager } from './notification-manager';
 import { DistributedPriorityQueue } from './distributed-priority-queue';
 import { Cron } from '@nestjs/schedule';
@@ -46,7 +46,7 @@ export class PriorityNotificationManager extends NotificationManager {
     };
 
     await this.priorityQueue.put(priorityLevel, queueData);
-    console.log(`✅ ${notificationType} añadido a la cola '${priorityLevel}'`);
+    Logger.log(`✅ ${notificationType} añadido a la cola '${priorityLevel}'`);
   }
 
   private getPriorityLevel(notificationType: string): string {
@@ -60,11 +60,11 @@ export class PriorityNotificationManager extends NotificationManager {
 
   async processQueue(): Promise<void> {
     if (await this.priorityQueue.empty()) {
-      console.log("🔄 No hay notificaciones pendientes en la cola");
+      Logger.log("🔄 No hay notificaciones pendientes en la cola");
       return;
     }
 
-    console.log("\n🔄 Iniciando procesamiento de colas por prioridad...");
+    Logger.log("\n🔄 Iniciando procesamiento de colas por prioridad...");
     let processedCount = 0;
 
     let message = await this.priorityQueue.get();
@@ -73,7 +73,7 @@ export class PriorityNotificationManager extends NotificationManager {
       const queueData = data as unknown as NotificationQueueData;
 
       try {
-        console.log(`\n📨 Procesando notificación de prioridad ${priorityLevel}`);
+        Logger.log(`\n📨 Procesando notificación de prioridad ${priorityLevel}`);
         await this.processNotification(queueData);
         processedCount++;
       } catch (error) {
@@ -83,7 +83,7 @@ export class PriorityNotificationManager extends NotificationManager {
       message = await this.priorityQueue.get();
     }
 
-    console.log(`\n✅ Procesamiento completado. ${processedCount} notificaciones procesadas.`);
+    Logger.log(`\n✅ Procesamiento completado. ${processedCount} notificaciones procesadas.`);
   }
 
   async empty(): Promise<boolean> {
@@ -93,22 +93,22 @@ export class PriorityNotificationManager extends NotificationManager {
   async purge(): Promise<void> {
 
     await this.priorityQueue.purge();
-    console.log('✅ Todas las colas han sido purgadas');
+    Logger.log('✅ Todas las colas han sido purgadas');
   }
 
   @Cron('*/5 * * * * *') // Se ejecuta cada 5 minuto
   async handleCronJob() {
-    console.log('\n⏰ Ejecutando verificación programada de notificaciones...');
+    Logger.log('\n⏰ Ejecutando verificación programada de notificaciones...');
     await this.processQueue();
   }
 
   private async processNotification(queueData: NotificationQueueData): Promise<void> {
     const { notificationType, userId, email, data } = queueData;
 
-    console.log(`\n📨 Procesando notificación:`);
-    console.log(`- Tipo: ${notificationType}`);
-    console.log(`- Usuario: ${userId}`);
-    console.log(`- Email: ${email}`);
+    Logger.log(`\n📨 Procesando notificación:`);
+    Logger.log(`- Tipo: ${notificationType}`);
+    Logger.log(`- Usuario: ${userId}`);
+    Logger.log(`- Email: ${email}`);
 
     switch (notificationType) {
       case 'Reminder':
@@ -166,7 +166,7 @@ export class PriorityNotificationManager extends NotificationManager {
         break;
 
       default:
-        console.log(`⚠️ Tipo de notificación desconocido: ${notificationType}`);
+        Logger.log(`⚠️ Tipo de notificación desconocido: ${notificationType}`);
     }
   }
 }
