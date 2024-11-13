@@ -12,7 +12,7 @@ export class SalonManagerController {
   constructor(private readonly salonManagerService: SalonManagerService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
+  @Post('create-salon')
   async createSalon(@Req() req: any, @Body() createSalonDto: CreateSalonDto): Promise<Salon> {
     try {
       const adminId = req.user?.userId;
@@ -28,17 +28,23 @@ export class SalonManagerController {
 
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('get-salon-by-admin')
   async getSalonsByAdmin(@Req() req: any): Promise<Salon[]> {
     try {
       const adminId = req.user?.userId;
       const response = await this.salonManagerService.getSalonsByAdminId(adminId);
+      
+      if (!response.length) {
+        this.logger.log(`No salons found for admin ID: ${adminId}`);
+      }
+
       return response;
     } catch (error) {
-      this.logger.error('Error creating salon', error);
-      throw new InternalServerErrorException('Failed to create salon');
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
     }
   }
+
 
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
