@@ -47,3 +47,5 @@ Thumbs.db
 *.env.*.local
 .env.development
 .env.production
+# ENV
+*/apps/notification-service/.env
