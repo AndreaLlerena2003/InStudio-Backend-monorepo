@@ -31,6 +31,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       }])
   ],
   controllers: [SalonManagerController],
-  providers: [SalonManagerController,  JwtAuthGuard],
+  providers: [SalonManagerService,  JwtAuthGuard],
 })
 export class SalonManagerModule {}
