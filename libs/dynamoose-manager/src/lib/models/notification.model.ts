@@ -41,16 +41,18 @@ export const NotificationSchema = new Schema(
     TypeBehavior: {
       type: String,
       enum: ['Subscription', 'Reminder', 'Offer'],
-      required: true
-    },
-    BeautySalonID: {
-      type: String,
       required: true,
       index: {
         name: 'TypeBehavior-BeautySalonID-index',
+        type: 'global',
         rangeKey: 'BeautySalonID',
-        project: true // Proyectar todos los atributos
+        project: true,
+        throughput: { read: 5, write: 5 }
       }
+    },
+    BeautySalonID: {
+      type: String,
+      required: true
     },
     Active: {
       type: Boolean,
