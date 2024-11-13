@@ -1,0 +1,19 @@
+{
+  "name": "dynamoose-manager",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/dynamoose-manager/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/dynamoose-manager",
+        "main": "libs/dynamoose-manager/src/index.ts",
+        "tsConfig": "libs/dynamoose-manager/tsconfig.lib.json",
+        "assets": ["libs/dynamoose-manager/*.md"]
+      }
+    }
+  },
+  "tags": []
+}
