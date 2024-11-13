@@ -5,20 +5,17 @@ import { NotificationSchema } from './models/notification.model';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      
-    }),
+    ConfigModule,
     DynamooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         Logger.log('Cargando configuración AWS...');
-        Logger.log('ACCESS_KEY_ID encontrado:', !!configService.get('ACCESS_KEY_ID'));
+        Logger.log('AWS_ACCESS_KEY_ID encontrado:', !!configService.get('AWS_ACCESS_KEY_ID'));
       
        return {
         aws: {
-          accessKeyId: configService.get<string>('ACCESS_KEY_ID'),
-          secretAccessKey: configService.get<string>('SECRET_ACCESS_KEY'),
+          accessKeyId: configService.get<string>('AWS_ACCESS_KEY_ID'),
+          secretAccessKey: configService.get<string>('AWS_SECRET_ACCESS_KEY'),
           region: configService.get<string>('AWS_REGION') || 'us-east-2',
         },
       };
