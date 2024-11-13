@@ -5,6 +5,10 @@ import {DbManagerModuleAdmin} from '@backend-in-studio/db-manager-admin';
 import { ConfigModule } from '@nestjs/config';
 import { AdminManagerModule } from './admin-manager/admin-manager.module';
 import {KafkaManagerModule} from '@backend-in-studio/kafka-manager';
+import { SubcategoryManagerModule } from './subcategory-manager/subcategory-manager.module';
+import { ServiceManagerModule } from './service-manager/service-manager.module';
+import { SalonManagerModule } from './salon-manager/salon-manager.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -13,7 +17,10 @@ import {KafkaManagerModule} from '@backend-in-studio/kafka-manager';
     }),
     DbManagerModuleAdmin,
     KafkaManagerModule,
-    AdminManagerModule],
+    AdminManagerModule,
+    SubcategoryManagerModule,
+    ServiceManagerModule,
+    SalonManagerModule],
   controllers: [AppController],
   providers: [AppService],
 })
