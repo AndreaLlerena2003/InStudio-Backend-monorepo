@@ -39,18 +39,15 @@ export class SalonManagerService {
       const salons = await this.salonService.findAll({
         include: [
           {
-            model: Admin,  
-            as: 'admin',   
+            model: Admin,
+            attributes: [],
+            as: 'admin',
             where: { id: adminId },
-            required: true, 
-          }
-        ]
+            required: true,
+          },
+        ],
       });
-
-      if (!salons.length) {
-        throw new NotFoundException('No salons found for the given admin ID');
-      }
-
+  
       this.logger.log(`Found ${salons.length} salons for admin ID: ${adminId}`);
       return salons;
     } catch (error) {
@@ -58,6 +55,7 @@ export class SalonManagerService {
       throw new InternalServerErrorException('Failed to fetch salons');
     }
   }
+  
 
   async updateSalonProfilePhoto(id: string, file: Express.Multer.File) {
     try {

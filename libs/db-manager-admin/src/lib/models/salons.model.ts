@@ -39,13 +39,13 @@ export class Salon extends Model<Salon> {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   declare profile_photo_url: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   declare banner_photos_url: string;
 }

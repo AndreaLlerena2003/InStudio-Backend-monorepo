@@ -31,6 +31,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       }])
   ],
   controllers: [SubcategoryManagerController],
-  providers: [SubcategoryManagerController,  JwtAuthGuard],
+  providers: [SubcategoryManagerService,  JwtAuthGuard],
 })
 export class SubcategoryManagerModule {}
