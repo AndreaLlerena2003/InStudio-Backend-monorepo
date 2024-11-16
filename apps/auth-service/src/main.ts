@@ -11,6 +11,10 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
   const port = process.env.PORT || 3000;
   await app.startAllMicroservices();
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   await app.listen(port);
   Logger.log(
