@@ -43,6 +43,7 @@ export class AuthManagerService {
             external_id,
         });
 
+        // Evento original para el servicio de usuarios
         this.kafkaService.sendEvent(
             {
                 id: external_id,
@@ -51,6 +52,16 @@ export class AuthManagerService {
                 districtId: registerUserDto.districtId,
             },
             'userRegistered',
+        );
+
+        // Nuevo evento específico para notificaciones
+        this.kafkaService.sendEvent(
+            {
+                email: registerUserDto.email,
+                userId: external_id,
+                userName: registerUserDto.name
+            },
+            'userRegisteredNotification',
         );
 
         return {

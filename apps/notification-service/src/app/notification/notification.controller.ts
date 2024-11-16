@@ -31,6 +31,17 @@ export class NotificationController {
     return await this.notificationService.handleOffer(data);
   }
 
+
+  @EventPattern('userRegisteredNotification')
+  async handleUserCreated(@Payload() data: {
+    email: string,
+    userId: string,
+    userName: string
+  }) {
+    Logger.log('User created, sending subscription email', JSON.stringify(data));
+    return await this.notificationService.handleSubscription(data.email, data.userId);
+  }
+
   @Post('subscribe')
   async subscribe(@Body() data: { email: string, userId: string }) {
     return this.notificationService.handleSubscription(data.email, data.userId);
