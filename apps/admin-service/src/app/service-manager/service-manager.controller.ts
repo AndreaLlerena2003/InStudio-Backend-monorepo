@@ -1,8 +1,9 @@
-import { Controller, Post, Body, Get, HttpCode, HttpStatus, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { UseGuards ,Controller, Post, Body, Get, HttpCode, HttpStatus, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service-dto';
 import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 class GetServicesBySalonDto {
   salon_id: number;
 }
@@ -13,7 +14,7 @@ export class ServiceController {
   private readonly logger = new Logger();
   constructor(private readonly serviceManagerService: ServiceManagerService) {}
 
- 
+  @UseGuards(JwtAuthGuard)
   @Post('create-service')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
@@ -24,7 +25,7 @@ export class ServiceController {
     }
   }
 
- 
+  @UseGuards(JwtAuthGuard)
   @Post('get-by-id')
   async getServiceById(@Body() getServiceDto: { service_id: number }): Promise<Service> {
     const service = await this.serviceManagerService.getServiceById(getServiceDto.service_id);
@@ -34,12 +35,13 @@ export class ServiceController {
     return service;
   }
 
-
+  @UseGuards(JwtAuthGuard)
   @Get('get-all')
   async getAllServices(): Promise<Service[]> {
     return await this.serviceManagerService.getAllServices();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('get-services-by-salon')
   async getServicesBySalonId(@Body() body: GetServicesBySalonDto): Promise<Service[]> {
     const { salon_id } = body;
@@ -55,6 +57,7 @@ export class ServiceController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('edit')
   async editService(
     @Body() updateServiceDto: UpdateServiceDto, 
