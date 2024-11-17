@@ -23,7 +23,7 @@ export class AdminManagerController {
 
   @UseGuards(JwtAuthGuard)
   @Get('get-admin-data')
-    async getUserData(@Req() req: any): Promise<Admin> {
+    async getUserData(@Req() req: any): Promise<any> {
     const externalId = req.user?.userId;
     try {
       return await this.serviceManagerService.getAdminData(externalId);

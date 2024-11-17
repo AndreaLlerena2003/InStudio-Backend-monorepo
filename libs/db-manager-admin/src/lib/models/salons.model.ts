@@ -48,4 +48,21 @@ export class Salon extends Model<Salon> {
     allowNull: true,
   })
   declare banner_photos_url: string;
+
+  @Column({
+    type: DataType.JSON,
+    allowNull: false,
+    defaultValue: {
+      "Monday": [],
+      "Tuesday": [],
+      "Wednesday": [],
+      "Thursday": [],
+      "Friday": [],
+      "Saturday": []
+    },
+  })
+  declare schedule: {
+    [day: string]: string[];
+  };
+
 }

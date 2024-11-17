@@ -22,8 +22,14 @@ export class Service extends Model<Service> {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   declare photo: string;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare subcategoryId: number; 
   
 }
