@@ -17,7 +17,6 @@ export class AdminManagerService implements OnModuleInit {
     private readonly s3Service: S3Service,
     @Inject('auth-client') private readonly kafkaClient: ClientKafka
   ) {
-    this.kafkaService.init();
   }
     async onModuleInit() {
         try {
