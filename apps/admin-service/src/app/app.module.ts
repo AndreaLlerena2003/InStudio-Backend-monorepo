@@ -10,6 +10,7 @@ import { ServiceManagerModule } from './service-manager/service-manager.module';
 import { SalonManagerModule } from './salon-manager/salon-manager.module';
 import { CategoryManagerModule } from './category-manager/category-manager.module';
 import { SharedModule } from './shared/shared.module';
+import { SearchManagerModule } from './search-manager/search-manager.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,6 +18,7 @@ import { SharedModule } from './shared/shared.module';
       envFilePath: '.env', 
     }),
     SharedModule,
+    SearchManagerModule,
     DbManagerModuleAdmin,
     KafkaManagerModule,
     AdminManagerModule,

@@ -84,7 +84,6 @@ export class ServiceManagerService {
           {
             model: Salon,
             attributes: [],
-            as: 'salons',
             where: { id: salon_id },
             required: true,
           },
