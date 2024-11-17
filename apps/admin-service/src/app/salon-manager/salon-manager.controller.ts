@@ -6,6 +6,8 @@ import { SalonManagerService } from './salon-manager.service';
 import { CreateSalonDto } from '../dto/create-salon-dto';
 import { Salon } from '@backend-in-studio/db-manager-admin';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
+import { UpdateSalonDto } from './dto/update-salon.dto';
 @Controller('salon-manager')
 export class SalonManagerController {
   private readonly logger = new Logger();
@@ -66,6 +68,23 @@ export class SalonManagerController {
       }
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('add-weekly-schedule')
+  async addWeeklySchedule(
+    @Body() weeklyScheduleDto: CreateWeeklyScheduleDto,
+  ): Promise<void> {
+    await this.salonManagerService.addWeeklySchedule(weeklyScheduleDto);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('edit')
+  async editSalon(
+    @Body() updateSalonDto: UpdateSalonDto
+  ): Promise<Salon> {
+    return await this.salonManagerService.editSalon(updateSalonDto);
   }
 
 
