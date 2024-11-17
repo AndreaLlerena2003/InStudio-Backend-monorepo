@@ -145,7 +145,8 @@ export class AuthManagerService {
 
         return { userId, role };
     }
+
+    async logout(response: Response) {
+        response.clearCookie('Authentication');
+    }
 }
-
-
-
