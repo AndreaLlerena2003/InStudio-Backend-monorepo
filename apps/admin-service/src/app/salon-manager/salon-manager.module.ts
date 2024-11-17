@@ -8,29 +8,12 @@ import {AuthLibModule} from '@backend-in-studio/auth-lib';
 import {S3ManagerModule} from '@backend-in-studio/s3-manager';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { SharedModule } from '../shared/shared.module';
 @Module({
   imports: [
-    SequelizeModule.forFeature([Service, Salon, Subcategory, Admin]), 
-    KafkaManagerModule,
-    S3ManagerModule,
-    AuthLibModule,
-    ClientsModule.register([
-      {
-        name: 'auth-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'client-admin-service',
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: 'backend-InStudio-auth-service',
-            allowAutoTopicCreation: true,
-          },
-        },
-      }])
+    SharedModule
   ],
   controllers: [SalonManagerController],
-  providers: [SalonManagerController,  JwtAuthGuard],
+  providers: [SalonManagerService,  JwtAuthGuard],
 })
 export class SalonManagerModule {}
