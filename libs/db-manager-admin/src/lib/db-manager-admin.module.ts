@@ -26,10 +26,11 @@ export class DbManagerModuleAdmin implements OnModuleInit {
   }
 
   private defineRelationships() {
-    Admin.hasOne(Salon, {
+    Admin.hasMany(Salon, {
       foreignKey: 'adminId',
       as: 'salons',
     });
+
     Salon.belongsTo(Admin, {
       foreignKey: 'adminId',
       as: 'admin',
@@ -53,13 +54,13 @@ export class DbManagerModuleAdmin implements OnModuleInit {
       as: 'subcategory',
     });
 
-    Salon.hasMany(Service, {
+   /* Salon.hasMany(Service, {
       foreignKey: 'salon_id',
       as: 'services',
     });
     Service.belongsTo(Salon, {
       foreignKey: 'salon_id',
       as: 'salons',
-    });
+    });*/
   }
 }

@@ -24,4 +24,11 @@ export class Subcategory extends Model<Subcategory> {
     allowNull: false,
   })
   declare description: string;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare categoryId: number;
+
 }
