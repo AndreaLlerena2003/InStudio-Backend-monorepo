@@ -9,12 +9,14 @@ import { SubcategoryManagerModule } from './subcategory-manager/subcategory-mana
 import { ServiceManagerModule } from './service-manager/service-manager.module';
 import { SalonManagerModule } from './salon-manager/salon-manager.module';
 import { CategoryManagerModule } from './category-manager/category-manager.module';
+import { SharedModule } from './shared/shared.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, 
       envFilePath: '.env', 
     }),
+    SharedModule,
     DbManagerModuleAdmin,
     KafkaManagerModule,
     AdminManagerModule,
