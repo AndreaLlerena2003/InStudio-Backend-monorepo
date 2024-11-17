@@ -60,4 +60,10 @@ export class AuthManagerController {
     async validateAdmin(data: { Authentication: string }) {
         return this.authManagerService.validateToken(data, 1);
     }
+
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) response: Response) {
+        await this.authManagerService.logout(response);
+        response.sendStatus(200);
+    }
 }
