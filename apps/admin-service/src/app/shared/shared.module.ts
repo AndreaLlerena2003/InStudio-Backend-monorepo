@@ -5,6 +5,8 @@ import { S3ManagerModule } from '@backend-in-studio/s3-manager';
 import { AuthLibModule } from '@backend-in-studio/auth-lib';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Service, Salon, Subcategory, Admin, Category } from '@backend-in-studio/db-manager-admin';
+import { KafkaManagerService } from './kafka.init.service';
+
 @Module({
   imports: [
     SequelizeModule.forFeature([Service, Salon, Subcategory, Admin, Category]), 
@@ -28,7 +30,9 @@ import { Service, Salon, Subcategory, Admin, Category } from '@backend-in-studio
       },
     ]),
   ],
+  providers: [KafkaManagerService],
   exports: [
+    KafkaManagerService,
     KafkaManagerModule,
     S3ManagerModule,
     AuthLibModule,

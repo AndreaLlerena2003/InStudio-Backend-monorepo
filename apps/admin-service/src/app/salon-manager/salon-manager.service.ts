@@ -17,7 +17,6 @@ export class SalonManagerService {
     @InjectModel(Admin)
     private readonly adminService: typeof Admin,
   ) {
-    this.kafkaService.init();
   }
 
   async createSalon(createSalonDto: CreateSalonDto): Promise<Salon> {

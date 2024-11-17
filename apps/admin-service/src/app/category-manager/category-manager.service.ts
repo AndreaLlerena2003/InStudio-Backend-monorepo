@@ -14,7 +14,6 @@ export class CategoryManagerService {
     private readonly kafkaService: KafkaService,
     private readonly s3Service: S3Service,
   ) {
-    this.kafkaService.init();
   }
 
   async createCategory(createCategoryDto: CreateCategoryDto): Promise<Category> {
