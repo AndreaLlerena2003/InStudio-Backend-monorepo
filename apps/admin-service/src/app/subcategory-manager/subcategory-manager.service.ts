@@ -31,5 +31,19 @@ export class SubcategoryManagerService {
     }
   }  
 
+
+  async getAllSubcategories(): Promise<Subcategory[]> {
+    try {
+      const subcategories = await this.subcategoryService.findAll();
+      if (!subcategories || subcategories.length === 0) {
+        throw new NotFoundException('No subcategories found');
+      }
+      return subcategories;
+    } catch (error) {
+      this.logger.error('Error fetching subcategories', error);
+      throw new InternalServerErrorException('Failed to fetch subcategories');
+    }
+  }
+
   
 }

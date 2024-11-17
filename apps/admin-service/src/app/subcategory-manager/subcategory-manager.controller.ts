@@ -1,4 +1,4 @@
-import { Controller, Post, Body, InternalServerErrorException, UploadedFile,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, InternalServerErrorException, UploadedFile,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException, HttpCode } from '@nestjs/common';
 import { CreateSubcategoryDto } from '../dto/create-subcategory-dto';
 import { SubcategoryManagerService } from './subcategory-manager.service';
 import { Subcategory } from '@backend-in-studio/db-manager-admin';
@@ -8,6 +8,7 @@ export class SubcategoryManagerController {
   private readonly logger = new Logger();
   constructor(private readonly subcategoryManagerService: SubcategoryManagerService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('create-subcategory')
   async createSubcategory(@Body() createSubcategoryDto: CreateSubcategoryDto): Promise<Subcategory> {
     try {
@@ -17,6 +18,16 @@ export class SubcategoryManagerController {
     } catch (error) {
       this.logger.error('Error creating subcategory', error);
       throw new InternalServerErrorException('Failed to create subcategory');
+    }
+  }
+
+  @Get('all-subcategories')
+  @HttpCode(HttpStatus.OK)
+  async getAllSubcategories(): Promise<Subcategory[]> {
+    try {
+      return await this.subcategoryManagerService.getAllSubcategories();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch subcategories');
     }
   }
  
