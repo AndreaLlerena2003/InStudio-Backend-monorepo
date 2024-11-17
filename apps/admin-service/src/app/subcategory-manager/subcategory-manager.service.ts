@@ -13,10 +13,8 @@ export class SubcategoryManagerService {
     private readonly subcategoryService: typeof Subcategory,
     private readonly kafkaService: KafkaService,
     private readonly s3Service: S3Service,
-  ) {
-    this.kafkaService.init();
-  }
-
+  ) {}
+  
   async createSubcategory(createSubcategoryDto: CreateSubcategoryDto): Promise<Subcategory> {
     try {
       const newSubcategory = await this.subcategoryService.create({
