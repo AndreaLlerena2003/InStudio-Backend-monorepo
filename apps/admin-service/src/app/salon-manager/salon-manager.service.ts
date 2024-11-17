@@ -163,20 +163,21 @@ export class SalonManagerService {
       if (updateSalonDto.description) {
         salon.description = updateSalonDto.description;
       }
-
+  
       if (updateSalonDto.schedule) {
         for (const { day, hours } of updateSalonDto.schedule) {
-          await this.addSchedule(updateSalonDto.salonId, day, hours); 
+          await this.addSchedule(updateSalonDto.salonId, day, hours);
         }
       }
-  
       await salon.save();
+      const updatedSalon = await this.salonService.findByPk(updateSalonDto.salonId);
       this.logger.log(`Salon with ID ${updateSalonDto.salonId} updated successfully`);
-      return salon;
+      return updatedSalon;
     } catch (error) {
       this.logger.error(`Error updating salon with ID ${updateSalonDto.salonId}`, error);
       throw new InternalServerErrorException('Failed to update salon');
     }
   }
+  
   
 }
