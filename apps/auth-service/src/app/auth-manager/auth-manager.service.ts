@@ -174,7 +174,8 @@ export class AuthManagerService {
         });
         return user.email;
     }
+
+    async logout(response: Response) {
+        response.clearCookie('Authentication');
+    }
 }
-
-
-

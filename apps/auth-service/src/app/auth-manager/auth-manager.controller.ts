@@ -78,4 +78,10 @@ export class AuthManagerController {
     }
 
 
+
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) response: Response) {
+        await this.authManagerService.logout(response);
+        response.sendStatus(200);
+    }
 }
