@@ -6,13 +6,15 @@ import { SalonManagerService } from './salon-manager.service';
 import { CreateSalonDto } from '../dto/create-salon-dto';
 import { Salon } from '@backend-in-studio/db-manager-admin';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
+import { UpdateSalonDto } from './dto/update-salon.dto';
 @Controller('salon-manager')
 export class SalonManagerController {
   private readonly logger = new Logger();
   constructor(private readonly salonManagerService: SalonManagerService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
+  @Post('create-salon')
   async createSalon(@Req() req: any, @Body() createSalonDto: CreateSalonDto): Promise<Salon> {
     try {
       const adminId = req.user?.userId;
@@ -28,17 +30,23 @@ export class SalonManagerController {
 
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('get-salon-by-admin')
   async getSalonsByAdmin(@Req() req: any): Promise<Salon[]> {
     try {
       const adminId = req.user?.userId;
       const response = await this.salonManagerService.getSalonsByAdminId(adminId);
+      
+      if (!response.length) {
+        this.logger.log(`No salons found for admin ID: ${adminId}`);
+      }
+
       return response;
     } catch (error) {
-      this.logger.error('Error creating salon', error);
-      throw new InternalServerErrorException('Failed to create salon');
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
     }
   }
+
 
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
@@ -60,6 +68,23 @@ export class SalonManagerController {
       }
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('add-weekly-schedule')
+  async addWeeklySchedule(
+    @Body() weeklyScheduleDto: CreateWeeklyScheduleDto,
+  ): Promise<void> {
+    await this.salonManagerService.addWeeklySchedule(weeklyScheduleDto);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('edit')
+  async editSalon(
+    @Body() updateSalonDto: UpdateSalonDto
+  ): Promise<Salon> {
+    return await this.salonManagerService.editSalon(updateSalonDto);
   }
 
 

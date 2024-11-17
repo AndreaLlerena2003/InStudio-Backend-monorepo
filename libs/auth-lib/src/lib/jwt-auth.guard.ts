@@ -54,12 +54,9 @@ import { firstValueFrom } from 'rxjs';
     }
 
     async onModuleInit() {
-      console.log('Connecting to Kafka...');
       try {
-          console.log('Iniciando');
           await this.kafkaClient.subscribeToResponseOf('validate_user');
           await this.kafkaClient.subscribeToResponseOf('validate_user.reply');
-          console.log('Connected to Kafka');
       } catch (error) {
           console.error('Failed to connect to Kafka', error);
       }

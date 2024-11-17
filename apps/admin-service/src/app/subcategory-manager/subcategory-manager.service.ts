@@ -13,10 +13,8 @@ export class SubcategoryManagerService {
     private readonly subcategoryService: typeof Subcategory,
     private readonly kafkaService: KafkaService,
     private readonly s3Service: S3Service,
-  ) {
-    this.kafkaService.init();
-  }
-
+  ) {}
+  
   async createSubcategory(createSubcategoryDto: CreateSubcategoryDto): Promise<Subcategory> {
     try {
       const newSubcategory = await this.subcategoryService.create({
@@ -30,6 +28,20 @@ export class SubcategoryManagerService {
       throw new InternalServerErrorException('Failed to create salon');
     }
   }  
+
+
+  async getAllSubcategories(): Promise<Subcategory[]> {
+    try {
+      const subcategories = await this.subcategoryService.findAll();
+      if (!subcategories || subcategories.length === 0) {
+        throw new NotFoundException('No subcategories found');
+      }
+      return subcategories;
+    } catch (error) {
+      this.logger.error('Error fetching subcategories', error);
+      throw new InternalServerErrorException('Failed to fetch subcategories');
+    }
+  }
 
   
 }
