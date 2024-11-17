@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Res, Req } from '@nestjs/common';
 import { AuthManagerService } from './auth-manager.service';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { RegisterAdminDto } from '../dto/register-admin.dto';
@@ -7,8 +7,8 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { Response } from 'express';
 import { AuthUsers } from '@backend-in-studio/db-manager-auth';
-import { MessagePattern } from '@nestjs/microservices';
-
+import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
+import {JwtAuthGuard} from '@backend-in-studio/auth-lib';
 @Controller('auth-manager')
 export class AuthManagerController {
     constructor(
@@ -60,4 +60,22 @@ export class AuthManagerController {
     async validateAdmin(data: { Authentication: string }) {
         return this.authManagerService.validateToken(data, 1);
     }
+
+    @MessagePattern('get_email')
+    async getEmail(userId: string) {
+        return await this.authManagerService.getUserEmailByExternalId(userId);
+    }
+
+    @EventPattern('update-password')
+    async handlePasswordUpdate(@Payload() payload: { newPassword: string, authentication: string }) {
+        const { newPassword, authentication } = payload;
+        try {
+            await this.authManagerService.changePasswordByExternalId(authentication, newPassword);
+        } catch (error) {
+            console.error('Error updating password:', error);
+            throw new Error('Failed to update password');
+        }
+    }
+
+
 }
