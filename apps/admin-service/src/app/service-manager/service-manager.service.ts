@@ -16,7 +16,6 @@ export class ServiceManagerService {
     private readonly subcategoryService: typeof Subcategory,
     private readonly kafkaService: KafkaService,
   ) {
-    this.kafkaService.init();
   }
 
 
