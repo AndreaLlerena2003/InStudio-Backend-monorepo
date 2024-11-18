@@ -3,11 +3,14 @@ import { SNSClient, SubscribeCommand, PublishCommand } from "@aws-sdk/client-sns
 import * as dotenv from 'dotenv';
 import { NotificationRepository } from '../app/notification/notification.repository'; // Removido INotification
 import { CreateNotificationDto } from '../app/dto/notification.dto';
+import { SetSubscriptionAttributesCommand } from "@aws-sdk/client-sns";
+
 
 dotenv.config();
 
 @Injectable()
 export class NotificationManager {
+  // Remover decorador WebSocketGateway y server property
   protected config: { maxAttempts: number };
   protected sns_client: SNSClient;
 
@@ -59,19 +62,62 @@ export class NotificationManager {
     }
   }
 
-  async subscribe_to_sns_topic(email) {
+  async setSubscriptionAttributes(subscriptionArn: string, attributeName: string, attributeValue: string | number | boolean | object) {
+    try {
+      const command = new SetSubscriptionAttributesCommand({
+        SubscriptionArn: subscriptionArn,
+        AttributeName: attributeName,
+        AttributeValue: JSON.stringify(attributeValue), // Convierte el valor a JSON si es necesario (como en el caso de FilterPolicy)
+      });
+  
+      const response = await this.sns_client.send(command);
+  
+      Logger.log(`✅ Subscription attribute "${attributeName}" set successfully for ${subscriptionArn}`);
+      return response;
+    } catch (error) {
+      Logger.log(`❌ Error setting subscription attribute "${attributeName}" for ${subscriptionArn}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async setFilterPolicy(subscriptionArn: string, filterPolicy: Record<string, string | number | boolean>) {
+    try {
+      const params = {
+        SubscriptionArn: subscriptionArn,
+        AttributeName: 'FilterPolicy',
+        AttributeValue: JSON.stringify(filterPolicy),
+      };
+      const command = new SetSubscriptionAttributesCommand(params);
+      await this.sns_client.send(command);
+      Logger.log(`✅ Filter policy set for subscription: ${subscriptionArn}`);
+    } catch (error) {
+      Logger.log(`❌ Error setting filter policy: ${error.message}`);
+      throw error;
+    }
+  }
+  
+
+  async subscribe_to_sns_topic(email: string, filterPolicy: Record<string, string | number | boolean>) {
     try {
       const command = new SubscribeCommand({
         TopicArn: process.env.ARN,
         Protocol: 'email',
-        Endpoint: email
+        Endpoint: email,
       });
+  
       const response = await this.sns_client.send(command);
+  
+      // Configurar el filtro inmediatamente después de crear la suscripción
+      const subscriptionArn = response.SubscriptionArn;
+      await this.setFilterPolicy(subscriptionArn, filterPolicy);
+  
       return response;
     } catch (error) {
-      return {"status": "error", "message": error.message};
+      Logger.log(`❌ Error subscribing to SNS topic: ${error.message}`);
+      throw error;
     }
   }
+  
 
   async send_offer_notification(user_id, email, beauty_salon_id, offer_id, description) {
     const max_retries = 3;
@@ -89,6 +135,10 @@ export class NotificationManager {
                     'email': {
                         DataType: 'String',
                         StringValue: email
+                    },
+                    'typeBehavior': { // Nuevo atributo para filtrado
+                        DataType: 'String',
+                        StringValue: 'Offer'
                     }
                 }
             });
@@ -134,6 +184,10 @@ export class NotificationManager {
                     'email': {
                         DataType: 'String',
                         StringValue: email
+                    },
+                    'typeBehavior': { // Nuevo atributo para filtrado
+                        DataType: 'String',
+                        StringValue: 'Reminder'
                     }
                 }
             });
@@ -182,6 +236,10 @@ export class NotificationManager {
                 'email': {
                     DataType: 'String',
                     StringValue: email
+                },
+                'typeBehavior': { // Nuevo atributo para filtrado
+                    DataType: 'String',
+                    StringValue: 'Unsubscription'
                 }
             }
         });

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotificationRepository } from './notification.repository';
+import { NotificationRepository, INotification } from './notification.repository';
 import { PriorityNotificationManager } from '../../services/priority-notification-manager';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
+
 
 @Injectable()
 export class NotificationService {
@@ -89,4 +90,11 @@ export class NotificationService {
     await this.priorityManager.purge();
     return { message: 'All queues purged successfully' };
   }
+
+  async getRecentNotificationsForUser(userId: string): Promise<INotification[]> {
+    return this.notificationRepository.getRecentNotificationsForUser(userId);
+  }
+
+ 
+ 
 }

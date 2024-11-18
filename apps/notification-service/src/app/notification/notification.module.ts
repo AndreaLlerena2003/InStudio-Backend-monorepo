@@ -31,18 +31,33 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             allowAutoTopicCreation: true,
           },
         },
-      }])
+      },
+      {
+        name: 'auth-client',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'auth',
+            brokers: ['localhost:9092'], // Reemplaza con tus brokers Kafka
+          },
+          consumer: {
+            groupId: 'notification-service-consumer', // Reemplaza con tu groupId
+          },
+        },
+      },
+    ])
   ],
   controllers: [NotificationController],
   providers: [
     NotificationService,
     NotificationRepository,
+    NotificationManager,
     PriorityNotificationManager,
-    NotificationManager
   ],
   exports: [
     NotificationService,
-    NotificationRepository
+    NotificationRepository,
+    PriorityNotificationManager  // Exportar el Manager
   ]
 })
 export class NotificationModule {}

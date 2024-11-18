@@ -139,4 +139,16 @@ export class NotificationRepository {
     this.logger.warn(`No se encontró usuario con el email: ${email}`);
     return null;
   }
+
+  async getRecentNotificationsForUser(userId: string): Promise<INotification[]> {
+    return this.notificationModel
+      .query('UserID_TypeBehavior_BeautySalonID')
+      .beginsWith(`${userId}#`)
+      .filter('TypeBehavior')
+      .in(['Reminder', 'Offer'])
+      .limit(5)
+      .sort('descending')
+      .exec();
+  }
+  
 }

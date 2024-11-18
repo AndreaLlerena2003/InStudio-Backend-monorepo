@@ -5,7 +5,7 @@ import { Cron } from '@nestjs/schedule';
 import { NotificationRepository } from '../app/notification/notification.repository';
 import { CreateNotificationDto } from '../app/dto/notification.dto';
 
-interface NotificationQueueData {
+export interface NotificationQueueData {
   notificationType: string;
   userId: string;
   email: string;
@@ -162,7 +162,7 @@ export class PriorityNotificationManager extends NotificationManager {
         break;
 
       case 'Subscription':
-        await this.subscribe_to_sns_topic(email);
+        await this.subscribe_to_sns_topic(email, { notificationType: 'Subscription' });
         break;
 
       default:

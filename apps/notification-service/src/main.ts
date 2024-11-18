@@ -5,7 +5,15 @@ import { AppModule } from './app/app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: (origin, callback) => {
+        callback(null, true);
+      },
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+  });
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
