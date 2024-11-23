@@ -22,6 +22,7 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.2",
+    "@nestjs/schedule": "^4.1.1",
     "@nestjs/sequelize": "^10.0.1",
     "@nrwl/nest": "^19.8.4",
     "aws4": "^1.13.2",
@@ -30,6 +31,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
+    "date-fns": "^4.1.0",
     "joi": "^17.13.3",
     "kafkajs": "^2.2.4",
     "mongoose": "^8.7.1",
@@ -41,7 +43,7 @@
     "rxjs": "^7.8.1",
     "sequelize": "^6.37.4",
     "sequelize-typescript": "^2.1.6",
-    "uuid": "^11.0.2"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

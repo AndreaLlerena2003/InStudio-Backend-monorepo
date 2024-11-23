@@ -6,6 +6,14 @@ import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
+
+type Schedule = Record<string, string[]>;
+export interface WeeklyAvailabilityInput {
+  salon_id: number;
+  schedules: Schedule;
+}
+
+
 @Injectable()
 export class SalonManagerService {
   private readonly logger = new Logger();
@@ -33,6 +41,28 @@ export class SalonManagerService {
     }
   }  
 
+  async getAllSalonsIdAndSchedulesAndSendToReservation() {
+    try {
+        const salons = await this.salonService.findAll({
+            attributes: ['id', 'schedule'], 
+        });
+        const result = salons.map((salon) => ({
+            salonId: salon.id,  
+            schedule: salon.schedule, 
+        }));
+
+        for (let salon of result) {
+            let payload: WeeklyAvailabilityInput = {
+                salon_id: salon.salonId,
+                schedules: salon.schedule,
+            };
+            this.kafkaService.sendEvent(payload, 'availability.slots.create');
+        }
+    } catch (error) {
+        this.logger.error('Failed to fetch salons and schedules:', error);
+        throw new Error('Failed to fetch salons and schedules');
+    }
+  }
   
   async getSalonsByAdminId(adminId: string): Promise<Salon[]> {
     try {
@@ -134,7 +164,11 @@ export class SalonManagerService {
   
       this.logger.log(`Weekly schedule updated successfully for salon ID: ${salon_id}`);
       const finalSchedule = (await this.getSalonBySalonId(salon_id)).schedule;
-      this.kafkaService.sendEvent(finalSchedule,'create-slots');
+      const payload: WeeklyAvailabilityInput = {
+        salon_id: salon_id,
+        schedules: finalSchedule,
+      };      
+      this.kafkaService.sendEvent(payload,'availability.slots.create');
       return finalSchedule;
     } catch (error) {
       this.logger.error(`Error updating the weekly schedule for salon ID: ${weeklyScheduleDto.salon_id} - ${error.message}`);
