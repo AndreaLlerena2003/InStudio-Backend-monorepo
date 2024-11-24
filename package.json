@@ -7,7 +7,7 @@
   },
   "private": true,
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.687.0",
+    "@aws-sdk/client-dynamodb": "^3.699.0",
     "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sns": "^3.687.0",
     "@aws-sdk/client-sqs": "^3.687.0",
@@ -64,6 +64,7 @@
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@types/aws-sdk": "^2.7.4",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.12",
