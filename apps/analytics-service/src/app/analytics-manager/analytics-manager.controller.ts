@@ -2,7 +2,8 @@ import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import { BookingEventDto } from './dto/booking-event-dto';
 import { AnalyticsManagerService } from './analytics-manager.service';
 import { MetricsDto } from './dto/metrics-dto';
-
+import { EventPattern, Payload } from '@nestjs/microservices';
+import { Logger } from '@nestjs/common';
 @Controller('analytics-manager')
 export class AnalyticsManagerController {
   constructor(
@@ -12,6 +13,12 @@ export class AnalyticsManagerController {
   @Get()
   helloWorld() {
     return this.analyticsManagerService.helloWorld();
+  }
+
+  @EventPattern('reservation-created')
+  async handleReservationCreated(@Payload() bookingEventDto: BookingEventDto) {
+    Logger.log('Reservation created', JSON.stringify(bookingEventDto));
+    return await this.analyticsManagerService.processBookingEvent(bookingEventDto);
   }
 
   @Post()
