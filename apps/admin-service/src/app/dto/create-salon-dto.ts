@@ -26,7 +26,7 @@ export class CreateSalonDto {
   banner_photos_url: string;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   adminId: number; 
 
 }
