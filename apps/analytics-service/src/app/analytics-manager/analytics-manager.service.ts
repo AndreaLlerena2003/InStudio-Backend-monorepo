@@ -39,9 +39,12 @@ export class AnalyticsManagerService {
   async getData(metricDto: MetricsDto) {
     try {
       const startDate = new Date(metricDto.start_date);
+      startDate.setDate(startDate.getDate() - 1);
+      this.logger.log(`Filtering data from 1 ${metricDto.start_date}`);
+      this.logger.log(`Filtering data from ${metricDto.start_date}`);
       const endDate = new Date(metricDto.end_date);
       this.logger.log(
-        `Filtering data from ${startDate.toDateString()} to ${endDate.toDateString()}`
+        `⚡ Obtaining data from ${startDate.toDateString()} to ${endDate.toDateString()}`
       );
 
       const files = await this.s3Service.listFiles();
@@ -57,7 +60,7 @@ export class AnalyticsManagerService {
 
       if (parquetFiles.length === 0) {
         this.logger.error(
-          `No se encontraron archivos Parquet en el bucket S3 bajo el prefijo especificado.`
+          `🔴 No se encontraron archivos Parquet en el bucket S3 bajo el prefijo especificado.`
         );
         throw new HttpException(
           'Internal Server Error',
@@ -131,7 +134,7 @@ export class AnalyticsManagerService {
         FROM parquet_data
         WHERE 
           salon_id = '1' AND
-          booking_date >= '${metricDto.start_date}' AND 
+          booking_date >= '${startDate.toISOString()}' AND 
           booking_date <= '${metricDto.end_date}'
           `);
 
@@ -143,7 +146,7 @@ export class AnalyticsManagerService {
           FROM parquet_data
         WHERE 
           salon_id = '1' AND
-          booking_date >= '${metricDto.start_date}' AND 
+          booking_date >= '${startDate.toISOString()}' AND 
           booking_date <= '${metricDto.end_date}'
         GROUP BY date
         ORDER BY date
@@ -155,16 +158,18 @@ export class AnalyticsManagerService {
         data: dailyResult.map((row) => ({
           date: row.date,
           total_quantity: row.quantity ?? 0,
-          total_amount: row.amount.toFixed(2) ?? 0,
+          total_amount: parseFloat(row.amount.toFixed(2)) ?? 0,
         })),
       };
+
+      this.logger.log(`⚡ Data processed successfully.`);
 
       return {
         statusCode: 200,
         body: { ...formattedResult },
       };
     } catch (error) {
-      this.logger.error('Error processing files:', error);
+      this.logger.error('🔴 Error processing files:', error);
       throw new InternalServerErrorException('Error processing files');
     }
   }
@@ -173,7 +178,7 @@ export class AnalyticsManagerService {
     const startDate = new Date(metricDto.start_date);
     const endDate = new Date(metricDto.end_date);
     this.logger.log(
-      `📩 Downloading data from ${startDate.toDateString()} to ${endDate.toDateString()}`
+      `📂 Downloading data from ${startDate.toDateString()} to ${endDate.toDateString()}`
     );
 
     const files = await this.s3Service.listFiles();
@@ -189,7 +194,7 @@ export class AnalyticsManagerService {
 
     if (parquetFiles.length === 0) {
       this.logger.error(
-        `No se encontraron archivos Parquet en el bucket S3 bajo el prefijo especificado.`
+        `🔴 No se encontraron archivos Parquet en el bucket S3 bajo el prefijo especificado.`
       );
       throw new HttpException(
         'Internal Server Error',
@@ -219,7 +224,7 @@ export class AnalyticsManagerService {
     }
 
     if (allRows.length === 0) {
-      this.logger.error(`No se encontraron datos que cumplan con los filtros.`);
+      this.logger.error(`🔴 No se encontraron datos que cumplan con los filtros.`);
       throw new HttpException('No se encontraron datos.', HttpStatus.NOT_FOUND);
     }
 
@@ -232,7 +237,7 @@ export class AnalyticsManagerService {
       csvStringifier.getHeaderString() +
       csvStringifier.stringifyRecords(allRows);
 
-    this.logger.log(`Data successfully converted to CSV format.`);
+    this.logger.log(`📂 Data successfully converted to CSV format.`);
 
     // Retornar como archivo CSV
     return {
@@ -245,7 +250,7 @@ export class AnalyticsManagerService {
     };
   }
   catch(error) {
-    this.logger.error('Error processing files:', error);
+    this.logger.error('🔴 Error processing files:', error);
     throw new InternalServerErrorException('Error processing files');
   }
 }
