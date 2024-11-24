@@ -1,5 +1,24 @@
 import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional } from 'class-validator';
 
+export class ResultDto {
+  @IsString()
+  date: string;
+
+  @IsString()
+  time: string;
+
+  @IsString()
+  service: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  salonId: string;
+  
+  // Opcional: agregar campos adicionales si es necesario
+}
+
 export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()

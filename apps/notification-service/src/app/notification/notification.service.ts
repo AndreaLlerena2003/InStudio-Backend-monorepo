@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { NotificationRepository, INotification } from './notification.repository';
 import { PriorityNotificationManager } from '../../services/priority-notification-manager';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
-
+import { ResultDto } from '../dto/notification.dto'; // Asegúrate de importar ResultDto
 
 @Injectable()
 export class NotificationService {
@@ -16,7 +16,7 @@ export class NotificationService {
     kafkaService.init();
   }
 
-  async handleSubscription(email: string, userId: string) {
+  async handleSubscription(email: string, userId: string): Promise<ResultDto> {
     this.logger.log(`Processing subscription for ${email}`);
     await this.priorityManager.addNotificationToQueue(
       'Subscription',
@@ -24,7 +24,13 @@ export class NotificationService {
       email,
       {}
     );
-    return { message: 'Subscription queued successfully' };
+    return {
+      date: new Date().toISOString(),
+      time: '', // Asigna según corresponda
+      service: 'Subscription',
+      description: 'Subscription processed successfully',
+      salonId: '', // Asigna según corresponda o utiliza otro método para obtenerlo
+    };
   }
 
   async handleReminder(data: {
@@ -34,7 +40,7 @@ export class NotificationService {
     date: string,
     timeStr: string,
     service: string
-  }) {
+  }): Promise<ResultDto> {
     this.logger.log(`Processing reminder for ${data.email}`);
     await this.priorityManager.addNotificationToQueue(
       'Reminder',
@@ -47,7 +53,13 @@ export class NotificationService {
         service: data.service
       }
     );
-    return { message: 'Reminder queued successfully' };
+    return {
+      date: data.date,
+      time: data.timeStr,
+      service: data.service,
+      description: 'Reminder sent successfully',
+      salonId: data.beautySalonId,
+    };
   }
 
   async handleOffer(data: {
@@ -56,7 +68,7 @@ export class NotificationService {
     beautySalonId: string,
     offerId: string,
     description: string
-  }) {
+  }): Promise<ResultDto> {
     this.logger.log(`Processing offer for ${data.email}`);
     await this.priorityManager.addNotificationToQueue(
       'Offer',
@@ -68,7 +80,13 @@ export class NotificationService {
         description: data.description
       }
     );
-    return { message: 'Offer queued successfully' };
+    return {
+      date: new Date().toISOString(), // Asigna según corresponda
+      time: '', // Asigna según corresponda
+      service: 'Offer',
+      description: data.description,
+      salonId: data.beautySalonId,
+    };
   }
 
   async processNotificationQueue() {
@@ -95,6 +113,4 @@ export class NotificationService {
     return this.notificationRepository.getRecentNotificationsForUser(userId);
   }
 
- 
- 
 }

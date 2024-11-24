@@ -19,6 +19,7 @@ export type INotification = {
   ReminderID?: string;
   OfferID?: string;
   Description?: string;
+  UserId: string; // Añadir UserId
 };
 
 @Injectable()
@@ -36,6 +37,7 @@ export class NotificationRepository {
 
     const notificationData: INotification = {
       UserID_TypeBehavior_BeautySalonID: userKey,
+      UserId: notificationDto.userId, // Añadir UserId
       Timestamp: timestamp,
       Email: notificationDto.email,
       TypeBehavior: notificationDto.typeBehavior,
@@ -142,12 +144,11 @@ export class NotificationRepository {
 
   async getRecentNotificationsForUser(userId: string): Promise<INotification[]> {
     return this.notificationModel
-      .query('UserID_TypeBehavior_BeautySalonID')
-      .beginsWith(`${userId}#`)
-      .filter('TypeBehavior')
-      .in(['Reminder', 'Offer'])
+      .query('UserId') // Usar el nuevo índice
+      .eq(userId)
       .limit(5)
       .sort('descending')
+      .using('UserId-index') // Especificar el índice
       .exec();
   }
   

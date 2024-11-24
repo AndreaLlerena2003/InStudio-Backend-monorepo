@@ -10,6 +10,7 @@ export class Notification extends Item {
   BeautySalonID!: string;
   Active!: boolean;
   Status!: 'Pendiente' | 'Enviado' | 'Error';
+  UserId!: string; // Nuevo atributo
   Date?: string;
   Time?: string;
   Service?: string;
@@ -18,7 +19,23 @@ export class Notification extends Item {
   Description?: string;
 }
 
-// Schema para Dynamoose
+export interface INotification {
+  UserID_TypeBehavior_BeautySalonID: string;
+  Timestamp: string;
+  Email: string;
+  TypeBehavior: 'Subscription' | 'Reminder' | 'Offer';
+  BeautySalonID: string;
+  Active: boolean;
+  Status: 'Pendiente' | 'Enviado' | 'Error';
+  UserId: string; // Añadido: Definición de 'UserId'
+  Date?: string;
+  Time?: string;
+  Service?: string;
+  ReminderID?: string;
+  OfferID?: string;
+  Description?: string;
+}
+
 export const NotificationSchema = new Schema(
   {
     // Clave primaria compuesta
@@ -64,6 +81,17 @@ export const NotificationSchema = new Schema(
       enum: ['Pendiente', 'Enviado', 'Error'],
       required: true,
       default: 'Pendiente'
+    },
+    UserId: { // Definición del nuevo atributo
+      type: String,
+      required: true,
+      index: {
+        name: 'UserId-index',
+        type: 'global',
+        rangeKey: 'Timestamp',
+        project: true,
+        throughput: { read: 5, write: 5 }
+      }
     },
 
     // Atributos opcionales

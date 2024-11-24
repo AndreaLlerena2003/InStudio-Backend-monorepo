@@ -9,6 +9,7 @@ import { NotificationManager } from '../../services/notification-manager';
 import { PriorityNotificationManager } from '../../services/priority-notification-manager';
 import { DynamooseManagerModule } from '@backend-in-studio/dynamoose-manager';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
+import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
@@ -18,20 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     KafkaManagerModule,
     ScheduleModule.forRoot(),
     ClientsModule.register([
-      {
-        name: 'notification-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: process.env.KAFKA_CLIENT_ID,
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: process.env.KAFKA_GROUP_ID,
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
+      
       {
         name: 'auth-client',
         transport: Transport.KAFKA,
@@ -53,6 +41,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     NotificationRepository,
     NotificationManager,
     PriorityNotificationManager,
+    JwtAuthGuard,
   ],
   exports: [
     NotificationService,

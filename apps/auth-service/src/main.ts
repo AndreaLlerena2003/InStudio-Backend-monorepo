@@ -9,6 +9,12 @@ async function bootstrap() {
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['content-type', '*'],
+    credentials: true,
+  });
   const port = process.env.PORT || 3000;
   await app.startAllMicroservices();
 

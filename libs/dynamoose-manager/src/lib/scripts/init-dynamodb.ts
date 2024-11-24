@@ -1,4 +1,3 @@
-
 import * as AWS from 'aws-sdk';
 import * as dotenv from 'dotenv';
 import { Logger } from '@nestjs/common'; 
@@ -22,7 +21,8 @@ async function createNotificationTable() {
       { AttributeName: 'UserID_TypeBehavior_BeautySalonID', AttributeType: 'S' },
       { AttributeName: 'Timestamp', AttributeType: 'S' },
       { AttributeName: 'TypeBehavior', AttributeType: 'S' },
-      { AttributeName: 'BeautySalonID', AttributeType: 'S' }
+      { AttributeName: 'BeautySalonID', AttributeType: 'S' },
+      { AttributeName: 'UserId', AttributeType: 'S' } // Añadido: Definición de 'UserId'
     ],
     GlobalSecondaryIndexes: [
       {
@@ -30,6 +30,20 @@ async function createNotificationTable() {
         KeySchema: [
           { AttributeName: 'TypeBehavior', KeyType: 'HASH' },
           { AttributeName: 'BeautySalonID', KeyType: 'RANGE' }
+        ],
+        Projection: {
+          ProjectionType: 'ALL'
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5
+        }
+      },
+      {
+        IndexName: 'UserId-index',
+        KeySchema: [
+          { AttributeName: 'UserId', KeyType: 'HASH' },
+          { AttributeName: 'Timestamp', KeyType: 'RANGE' }
         ],
         Projection: {
           ProjectionType: 'ALL'

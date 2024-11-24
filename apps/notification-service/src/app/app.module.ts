@@ -4,10 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DynamooseManagerModule } from '@backend-in-studio/dynamoose-manager';
 import { NotificationModule } from './notification/notification.module';
-import { NotificationManager } from '../services/notification-manager';
-import { PriorityNotificationManager } from '../services/priority-notification-manager';
 import { DistributedPriorityQueue } from '../services/distributed-priority-queue';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
+import { AuthLibModule } from '@backend-in-studio/auth-lib'; // Importar el módulo de autenticación si es necesario
 
 @Module({
   imports: [
@@ -17,13 +16,12 @@ import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
     }),
     KafkaManagerModule,
     DynamooseManagerModule,
-    NotificationModule
+    NotificationModule,
+    AuthLibModule, // Añadir AuthLibModule aquí
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    NotificationManager,
-    PriorityNotificationManager,
     DistributedPriorityQueue
   ],
 })
