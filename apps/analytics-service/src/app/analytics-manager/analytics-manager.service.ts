@@ -39,10 +39,13 @@ export class AnalyticsManagerService {
   async getData(metricDto: MetricsDto) {
     try {
       const startDate = new Date(metricDto.start_date);
-      startDate.setDate(startDate.getDate() - 1);
-      this.logger.log(`Filtering data from 1 ${metricDto.start_date}`);
-      this.logger.log(`Filtering data from ${metricDto.start_date}`);
       const endDate = new Date(metricDto.end_date);
+
+      this.logger.log(startDate, endDate);
+      startDate.setDate(startDate.getDate() - 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
       this.logger.log(
         `⚡ Obtaining data from ${startDate.toDateString()} to ${endDate.toDateString()}`
       );
@@ -55,7 +58,8 @@ export class AnalyticsManagerService {
         const dateMatch = fileKey.match(/(\d{4}-\d{2}-\d{2})/); // Captura la fecha en el formato YYYY-MM-DD
         if (!dateMatch) return false;
         const fileDate = new Date(dateMatch[0]);
-        return fileDate >= startDate && fileDate <= endDate;
+        console.log(fileDate, startDate, endDate);
+        return fileDate >= startDate && fileDate < endDate;
       });
 
       if (parquetFiles.length === 0) {
@@ -126,7 +130,9 @@ export class AnalyticsManagerService {
         }
       }
 
-      // Ejecutar la consulta SQL
+      const temp_date = new Date();
+      temp_date.setDate(endDate.getDate() + 1);
+      
       const totalResult = await connection.all(`
         SELECT 
           SUM(price) AS total_price,
@@ -135,9 +141,9 @@ export class AnalyticsManagerService {
         WHERE 
           salon_id = '1' AND
           booking_date >= '${startDate.toISOString()}' AND 
-          booking_date <= '${metricDto.end_date}'
-          `);
-
+          booking_date <= '${temp_date.toISOString()}'
+      `);
+          
       const dailyResult = await connection.all(`
         SELECT 
           strftime('%Y-%m-%d', booking_date) AS date,
@@ -147,7 +153,7 @@ export class AnalyticsManagerService {
         WHERE 
           salon_id = '1' AND
           booking_date >= '${startDate.toISOString()}' AND 
-          booking_date <= '${metricDto.end_date}'
+          booking_date <= '${temp_date.toISOString()}'
         GROUP BY date
         ORDER BY date
       `);
