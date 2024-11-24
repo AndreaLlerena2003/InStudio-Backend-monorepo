@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateSubcategoryDto {
   @IsString()
@@ -8,4 +8,8 @@ export class CreateSubcategoryDto {
   @IsString()
   @IsNotEmpty()
   readonly description: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  readonly categoryId: number;
 }

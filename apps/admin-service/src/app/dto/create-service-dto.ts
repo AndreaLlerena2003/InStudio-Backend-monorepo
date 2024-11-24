@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateServiceDto {
 
@@ -14,4 +14,5 @@ export class CreateServiceDto {
   @IsNotEmpty()
   salon_id: number; 
 
+  
 }
