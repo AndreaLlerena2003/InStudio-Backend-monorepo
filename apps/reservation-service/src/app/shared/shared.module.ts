@@ -26,7 +26,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthLibModule,
     MongooseManagerModule,
     MongooseModule.forFeature([
-        { name: Booking.name, schema: BookingSchema, collection: 'pending-booking' },
+        { name: Booking.name, schema: BookingSchema, collection: 'booking_collection' },
         { name: Availability.name, schema: AvailabilitySchema, collection: 'availability_collection' },
     ]),
     ClientsModule.register([

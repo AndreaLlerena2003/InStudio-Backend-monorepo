@@ -10,7 +10,7 @@
     "@aws-sdk/client-dynamodb": "^3.687.0",
     "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sns": "^3.687.0",
-    "@aws-sdk/client-sqs": "^3.687.0",
+    "@aws-sdk/client-sqs": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.687.0",
     "@dsnp/parquetjs": "^1.8.5",
     "@nest-middlewares/cookie-parser": "^10.0.0",

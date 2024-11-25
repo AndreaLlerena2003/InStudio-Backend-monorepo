@@ -1,10 +1,6 @@
 import { IsNotEmpty, IsString, IsNumber, IsDateString } from 'class-validator';
 
 export class CreateBookingDto {
-  @IsString()
-  @IsNotEmpty()
-  user_id: string;
-
   @IsNumber()
   @IsNotEmpty()
   service_id: number;

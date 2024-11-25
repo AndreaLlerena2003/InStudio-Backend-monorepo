@@ -25,7 +25,7 @@ export class Booking extends AbstractDocument {
 
   @Prop()
   @Optional()
-  payment_id?: number;
+  payment_id?: string;
 
   @Prop({ default: uuidv4 })  
   bookingUUID?: string;  
