@@ -9,12 +9,14 @@ import { AvailabilityService } from './availability.service';
 import { UpdateAvailabilityController } from './usecases/update-availability.controller';
 import { SharedModule } from '../shared/shared.module';
 import { CheckAvailabilityController } from './usecases/fetch-availible-dates.controller';
-
+import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
-    SharedModule
+    SharedModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [UpdateAvailabilityController, CheckAvailabilityController],
-  providers: [AvailabilityService, AvailabilityRepository],
+  providers: [AvailabilityService, AvailabilityRepository,JwtAuthGuard],
 })
 export class AvailabilityModule {}

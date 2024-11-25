@@ -1,7 +1,8 @@
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Controller, Inject, Post, Body, HttpStatus, HttpException, Logger } from '@nestjs/common';
+import { Controller, Inject, Post, Body, HttpStatus, HttpException, Logger, HttpCode, UseGuards } from '@nestjs/common';
 import { AvailabilityService } from '../availability.service';
 import { CheckAvailabilityDto } from '../../dto/check-availability-dto';
+import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 
 @Controller('check-availability')
 export class CheckAvailabilityController{
@@ -11,7 +12,9 @@ export class CheckAvailabilityController{
         private readonly availabilityService: AvailabilityService,
     ) {}
 
+    @UseGuards(JwtAuthGuard)
     @Post('slots-check')
+    @HttpCode(HttpStatus.OK)
     async checkAvailability(@Body() data: CheckAvailabilityDto) {
         try {
             const result = await this.availabilityService.getAllAvailabilityDatesForSalonIdAndDate(data.salonId, data.date);
