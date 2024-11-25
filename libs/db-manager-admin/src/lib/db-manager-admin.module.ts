@@ -36,24 +36,6 @@ export class DbManagerModuleAdmin implements OnModuleInit {
       as: 'admin',
     });
 
-    Category.hasMany(Subcategory, {
-      foreignKey: 'categoryId',
-      as: 'subcategories',
-    });
-    Subcategory.belongsTo(Category, {
-      foreignKey: 'categoryId',
-      as: 'category',
-    });
-
-    Subcategory.hasMany(Service, {
-      foreignKey: 'subcategoryId',
-      as: 'services',
-    });
-    Service.belongsTo(Subcategory, {
-      foreignKey: 'subcategoryId',
-      as: 'subcategory',
-    });
-
    /* Salon.hasMany(Service, {
       foreignKey: 'salon_id',
       as: 'services',
