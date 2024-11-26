@@ -21,7 +21,7 @@ export class DbManagerModuleAdmin implements OnModuleInit {
 
   async onModuleInit() {
     this.defineRelationships();
-    await this.sequelize.sync({ force: false });
+    await this.sequelize.sync({ force: true });
     console.log('Tables synchronized successfully.');
   }
 

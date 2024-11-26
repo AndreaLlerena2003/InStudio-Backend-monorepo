@@ -61,7 +61,7 @@ export class SalonManagerController {
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
   @UseInterceptors(FileInterceptor('file'))
-  async updateUserProfilePhoto(@Body('salonId') salonId: string, @UploadedFile() file: Express.Multer.File) {
+  async updateUserProfilePhoto(@Body('salonId') salonId: number, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Profile photo file is required');
     }

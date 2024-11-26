@@ -99,7 +99,7 @@ export class SalonManagerService {
   }
   
 
-  async updateSalonProfilePhoto(id: string, file: Express.Multer.File) {
+  async updateSalonProfilePhoto(id: number, file: Express.Multer.File) {
     try {
         const salon = await this.salonService.findByPk(id);
         if (!salon) {
