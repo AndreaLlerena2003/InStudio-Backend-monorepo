@@ -1,21 +1,24 @@
-import { IsInt, IsISO8601, IsNotEmpty } from 'class-validator';
+import { IsInt, IsISO8601, IsNotEmpty, IsString } from 'class-validator';
 
 export class BookingEventDto {
   @IsNotEmpty()
-  @IsInt()
-  booking_id: number;
+  @IsString()
+  _id: string;
 
   @IsNotEmpty()
   @IsISO8601()
   booking_date: string;
+  
+  @IsNotEmpty()
+  time_slot: string;
 
   @IsNotEmpty()
-  @IsInt()
-  status: number;
+  @IsString()
+  status: string;
 
   @IsNotEmpty()
-  @IsInt()
-  user_id: number;
+  @IsString()
+  user_id: string;
 
   @IsNotEmpty()
   @IsInt()
@@ -23,9 +26,13 @@ export class BookingEventDto {
 
   @IsNotEmpty()
   @IsInt()
-  employee_id: number;
-
+  service_id: number;
+  
   @IsNotEmpty()
-  @IsInt()
-  payment_id: number;
+  @IsString()
+  bookingUUID: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  payment_id: string;
 }
