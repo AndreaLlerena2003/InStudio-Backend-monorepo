@@ -4,15 +4,12 @@ import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
-<<<<<<< Updated upstream
 import { MessagePattern } from '@nestjs/microservices';
-=======
 import { UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
 
 
->>>>>>> Stashed changes
 class GetServicesBySalonDto {
   salon_id: number;
 }
@@ -101,7 +98,7 @@ export class ServiceController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('update-service-photo')
+  @Patch('update-photo')
   @UseInterceptors(FileInterceptor('file'))
   async updateUserProfilePhoto(@Body('serviceId') serviceId , @UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -109,7 +106,7 @@ export class ServiceController {
     }
 
     try {
-      const updatedPhotoInfo = await this.serviceManagerService.updateUserProfilePhoto(userId, file);
+      const updatedPhotoInfo = await this.serviceManagerService.updateUserProfilePhoto(serviceId, file);
       
       return {
         message: 'Profile photo updated successfully',
@@ -122,5 +119,7 @@ export class ServiceController {
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  
 
 }

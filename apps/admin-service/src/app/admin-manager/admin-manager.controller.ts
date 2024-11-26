@@ -63,7 +63,9 @@ export class AdminManagerController {
   @UseGuards(JwtAuthGuard)
   @Patch('update-admin-photo')
   @UseInterceptors(FileInterceptor('file'))
-  async updateUserProfilePhoto(@Body('adminId') adminId: string, @UploadedFile() file: Express.Multer.File) {
+  async updateUserProfilePhoto(@Req() req:any, @UploadedFile() file: Express.Multer.File) {
+    console.log('File received:', file); 
+    const adminId = req.user?.userId;
     if (!file) {
       throw new BadRequestException('Profile photo file is required');
     }
