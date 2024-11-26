@@ -1,10 +1,18 @@
-import { UseGuards ,Controller, Post, Body, Get, HttpCode, HttpStatus, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { UseGuards ,Patch ,Controller, Post, Body, Get, HttpCode, HttpStatus, BadRequestException ,HttpException ,NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service-dto';
 import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
+<<<<<<< Updated upstream
 import { MessagePattern } from '@nestjs/microservices';
+=======
+import { UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadedFile } from '@nestjs/common';
+
+
+>>>>>>> Stashed changes
 class GetServicesBySalonDto {
   salon_id: number;
 }
@@ -89,6 +97,29 @@ export class ServiceController {
       }
       this.logger.error(`Failed to update service with ID ${updateServiceDto.serviceId}`, error.stack);
       throw new InternalServerErrorException('Failed to update service');
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-service-photo')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateUserProfilePhoto(@Body('serviceId') serviceId , @UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Profile photo file is required');
+    }
+
+    try {
+      const updatedPhotoInfo = await this.serviceManagerService.updateUserProfilePhoto(userId, file);
+      
+      return {
+        message: 'Profile photo updated successfully',
+        photoInfo: updatedPhotoInfo, 
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
