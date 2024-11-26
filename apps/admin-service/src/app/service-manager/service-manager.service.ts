@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, Logger, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Salon, Service } from '@backend-in-studio/db-manager-admin';
 import { CreateServiceDto } from '../dto/create-service-dto';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { Subcategory } from '@backend-in-studio/db-manager-admin';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { Category } from '@backend-in-studio/db-manager-admin';
 @Injectable()
 export class ServiceManagerService {
   private readonly logger = new Logger(ServiceManagerService.name);
@@ -22,6 +23,17 @@ export class ServiceManagerService {
   async createService(createServiceDto: CreateServiceDto): Promise<Service> {
     try {
       this.logger.log('Attempting to create a new service...');
+      const existingService = await this.serviceService.findOne({
+        where: {
+          salon_id: createServiceDto.salon_id,
+          subcategoryId: createServiceDto.subcategoryId,
+        },
+      });
+  
+      if (existingService) {
+        this.logger.warn(`Service with subcategoryId ${createServiceDto.subcategoryId} already exists for salon_id ${createServiceDto.salon_id}`);
+        throw new ConflictException('A service with this subcategory already exists for the given salon.');
+      }
       const createdService = await this.serviceService.create(createServiceDto);
       this.logger.log(`Service created successfully: ${createdService.id}`);
       return createdService;
@@ -76,7 +88,8 @@ export class ServiceManagerService {
     }
   }
 
-  async getServicesBySalonId(salon_id: number): Promise<Service[]> {
+ 
+  async getServicesBySalonIdAndCategoryId(salon_id: number): Promise<any[]> {
     try {
       this.logger.log(`Attempting to fetch services for salon_id: ${salon_id}`);
       const services = await this.serviceService.findAll({
@@ -89,24 +102,53 @@ export class ServiceManagerService {
           },
           {
             model: Subcategory,
-            as: 'subcategory', 
+            as: 'subcategory',  
+            include: [
+              {
+                model: Category,
+                as: 'category', 
+                attributes: ['id', 'name', 'description'],
+              },
+            ],
           },
         ],
       });
-  
+
       if (services.length === 0) {
         this.logger.warn(`No services found for salon_id: ${salon_id}`);
         throw new NotFoundException('No services found for this salon');
       }
+
+      const groupedByCategory = services.reduce((acc, service) => {
+        const subcategories = Array.isArray(service.subcategory) ? service.subcategory : [service.subcategory];
+        subcategories.forEach(subcategory => {
+          const category = subcategory.category;
+          if (!acc[category.id]) {
+            acc[category.id] = {
+              id: category.id,
+              name: category.name,
+              description: category.description,
+              subcategories: [],
+            };
+          }
+          acc[category.id].subcategories.push({
+            id: subcategory.id,
+            name: subcategory.name,
+            description: subcategory.description,
+            price: service.price,
+          });
+        });
   
-      return services;
+        return acc;
+      }, {});
+      const formattedResponse = Object.values(groupedByCategory);
+      return formattedResponse;
     } catch (error) {
       this.logger.error('Error retrieving services for salon', error.stack);
       throw new InternalServerErrorException('Failed to fetch services for salon');
     }
   }
-
-
+    
   async editService(updateServiceDto: UpdateServiceDto): Promise<Service> {
     try {
       const service = await this.serviceService.findByPk(updateServiceDto.serviceId, {
