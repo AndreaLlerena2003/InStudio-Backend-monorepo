@@ -8,4 +8,8 @@ export class MetricsDto {
   @IsNotEmpty()
   @IsDateString()
   end_date: Date;
+  
+  @IsNotEmpty()
+  @IsInt()
+  salon_id: number;
 }

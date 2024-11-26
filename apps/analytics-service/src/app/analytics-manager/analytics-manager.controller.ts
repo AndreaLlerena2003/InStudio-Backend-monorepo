@@ -17,16 +17,21 @@ export class AnalyticsManagerController {
 
   @EventPattern('reservation-created')
   async handleReservationCreated(@Payload() bookingEventDto: BookingEventDto) {
-    Logger.log('Reservation created', JSON.stringify(bookingEventDto));
-    return await this.analyticsManagerService.processBookingEvent(bookingEventDto);
+    const result = await this.analyticsManagerService.processBookingEvent(
+      bookingEventDto
+    );
+    // En realidad no debería retornar nada, ya que es un evento
+    return {
+      message: 'Booking register created successfully',
+      data: result,
+    };
   }
 
-  @Post()
+  @Post('/process-booking-event')
   async processBookingEvent(@Body() bookingEventDto: BookingEventDto) {
     const result = await this.analyticsManagerService.processBookingEvent(
       bookingEventDto
     );
-
     // En realidad no debería retornar nada, ya que es un evento
     return {
       message: 'Booking register created successfully',
