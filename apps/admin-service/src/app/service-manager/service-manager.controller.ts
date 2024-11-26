@@ -21,7 +21,7 @@ export class ServiceController {
     try {
       return await this.serviceManagerService.createService(createServiceDto);
     } catch (error) {
-      throw new Error('Failed to create service');
+      throw new Error(error.message);
     }
   }
 
@@ -47,7 +47,7 @@ export class ServiceController {
     const { salon_id } = body;
 
     try {
-      const services = await this.serviceManagerService.getServicesBySalonId(salon_id);
+      const services = await this.serviceManagerService.getServicesBySalonIdAndCategoryId(salon_id);
       return services;
     } catch (error) {
       if (error instanceof NotFoundException) {

@@ -10,7 +10,7 @@
     "@aws-sdk/client-dynamodb": "^3.687.0",
     "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sns": "^3.687.0",
-    "@aws-sdk/client-sqs": "^3.687.0",
+    "@aws-sdk/client-sqs": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.687.0",
     "@dsnp/parquetjs": "^1.8.5",
     "@nest-middlewares/cookie-parser": "^10.0.0",
@@ -22,6 +22,7 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.2",
+    "@nestjs/schedule": "^4.1.1",
     "@nestjs/sequelize": "^10.0.1",
     "@nrwl/nest": "^19.8.4",
     "aws4": "^1.13.2",
@@ -33,6 +34,7 @@
     "csv-writer": "^1.6.0",
     "duckdb-async": "^1.1.1",
     "express": "^4.21.1",
+    "date-fns": "^4.1.0",
     "joi": "^17.13.3",
     "kafkajs": "^2.2.4",
     "mongoose": "^8.7.1",
@@ -44,7 +46,7 @@
     "rxjs": "^7.8.1",
     "sequelize": "^6.37.4",
     "sequelize-typescript": "^2.1.6",
-    "uuid": "^11.0.2"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

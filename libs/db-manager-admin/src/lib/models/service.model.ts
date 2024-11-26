@@ -1,5 +1,7 @@
-import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, ForeignKey, BelongsTo} from 'sequelize-typescript';
+import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { Salon } from './salons.model';
+import { Subcategory } from './subcategory.model';  // Asegúrate de importar Subcategory
+
 @Table({
   tableName: 'services',
   timestamps: true,
@@ -26,11 +28,9 @@ export class Service extends Model<Service> {
   })
   declare photo: string;
 
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
-  declare subcategoryId: number; 
+  @ForeignKey(() => Subcategory)  
+  @Column
+  declare subcategoryId: number;
 
   @ForeignKey(() => Salon)
   @Column
@@ -38,5 +38,7 @@ export class Service extends Model<Service> {
 
   @BelongsTo(() => Salon)
   declare salon: Salon;
-  
+
+  @BelongsTo(() => Subcategory)  
+  declare subcategory: Subcategory;
 }
