@@ -1,6 +1,7 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -12,15 +13,23 @@ import { Database } from 'duckdb-async';
 import * as parquet from '@dsnp/parquetjs';
 import { MetricsDto } from './dto/metrics-dto';
 import { createObjectCsvStringifier } from 'csv-writer';
+import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AnalyticsManagerService {
   private readonly logger = new Logger();
 
   constructor(
+    @Inject('ADMIN_SERVICE') private readonly kafkaClient: ClientKafka,
     private readonly lambdaService: LambdaService,
     private readonly s3Service: S3Service
   ) {}
+
+  async onModuleInit() {
+    this.kafkaClient.subscribeToResponseOf('get-all-services-for-analytics');
+    await this.kafkaClient.connect();
+  }
 
   helloWorld() {
     return {
@@ -29,17 +38,101 @@ export class AnalyticsManagerService {
     };
   }
 
-  processBookingEvent(bookingEventDto: BookingEventDto): {} {
-    this.lambdaService.invokeLambda(bookingEventDto);
-    return {
-      processedData: bookingEventDto,
-    };
+  async processBookingEvent(bookingEventDto: BookingEventDto) {
+    Logger.log('🦆 Start processing reservation', bookingEventDto);
+    try {
+      const response$ = this.kafkaClient.send(
+        'get-all-services-for-analytics',
+        { salon_id: bookingEventDto.salon_id }
+      );
+      const response = await firstValueFrom(response$); // Obtén el resultado del Kafka
+
+      Logger.log(
+        '📥 Respuesta recibida desde Kafka:',
+        JSON.stringify(response)
+      );
+
+      // Buscar la subcategoría específica por service_id
+      let serviceName = 'Unknown Service';
+      let servicePrice = 0;
+
+      // Recorrer la respuesta para encontrar la subcategoría
+      for (const category of response) {
+        for (const subcategory of category.subcategories) {
+          if (subcategory.id === bookingEventDto.service_id) {
+            serviceName = subcategory.name;
+            servicePrice = subcategory.price;
+            break;
+          }
+        }
+      }
+
+      const payload = {
+        booking_id: bookingEventDto._id,
+        booking_date: `${bookingEventDto.booking_date}T${bookingEventDto.time_slot}:00`,
+        status: bookingEventDto.status,
+        user_id: bookingEventDto.user_id,
+        salon_id: bookingEventDto.salon_id,
+        payment_id: bookingEventDto.payment_id,
+        service_id: bookingEventDto.service_id,
+        service_name: serviceName,
+        price: servicePrice,
+      };
+      
+      this.lambdaService.invokeLambda(payload);
+      return {
+        processedData: payload,
+      };
+    } catch (error) {
+      Logger.error('🔴 Error al procesar el evento en Kafka:', error.message);
+      return {
+        processedData: 'ERROR: ' + error.message,
+      };
+    }
   }
+
+  // async processBookingEvent(bookingEventDto: BookingEventDto) {
+  //   Logger.log('🦆 Start processing reservation', bookingEventDto);
+  //   try {
+  //     const response$ = this.kafkaClient.send(
+  //       'get-all-services-for-analytics',
+  //       { salon_id: bookingEventDto.salon_id }
+  //     );
+  //     const response = await firstValueFrom(response$);
+  //     Logger.log('📥 Respuesta recibida desde Kafka:', response);
+
+  //     const payload = {
+  //       booking_id: bookingEventDto._id,
+  //       booking_date: new Date(
+  //         `${bookingEventDto.booking_date}T${bookingEventDto.time_slot}:00`
+  //       ),
+  //       status: bookingEventDto.status,
+  //       user_id: bookingEventDto.user_id,
+  //       salon_id: bookingEventDto.salon_id,
+  //       payment_id: bookingEventDto.payment_id,
+  //       service_id: bookingEventDto.service_id,
+  //       service_name: 'Corte de cabello',
+  //       price: 100,
+  //     };
+  //     Logger.log('Reservation created', JSON.stringify(payload));
+
+  //     // this.lambdaService.invokeLambda(bookingEventDto);
+  //     return {
+  //       processedData: payload,
+  //     };
+  //   } catch (error) {
+  //     Logger.error('🔴 Error al procesar el evento en Kafka:', error.message);
+  //     return {
+  //       processedData: 'ERROR: ' + error.message,
+  //     };
+  //   }
+  // }
 
   async getData(metricDto: MetricsDto) {
     try {
       const startDate = new Date(metricDto.start_date);
       const endDate = new Date(metricDto.end_date);
+      const salonId = metricDto.salon_id;
 
       this.logger.log(startDate, endDate);
       startDate.setDate(startDate.getDate() - 1);
@@ -95,15 +188,14 @@ export class AnalyticsManagerService {
       const connection = await db.connect();
       await connection.run(`
         CREATE TABLE parquet_data (
-            booking_id INTEGER,
+            booking_id STRING,
             booking_date TIMESTAMP,
-            status INTEGER,
-            user_id INTEGER,
+            status STRING,
+            user_id STRING,
             salon_id INTEGER,
-            employee_id INTEGER,
-            payment_id INTEGER,
-            district_id INTEGER,
+            payment_id STRING,
             service_id INTEGER,
+            service_name STRING,
             price FLOAT
           )
       `);
@@ -132,18 +224,18 @@ export class AnalyticsManagerService {
 
       const temp_date = new Date();
       temp_date.setDate(endDate.getDate() + 1);
-      
+
       const totalResult = await connection.all(`
         SELECT 
           SUM(price) AS total_price,
           CAST(COUNT(*) AS INTEGER) AS total_quantity
         FROM parquet_data
         WHERE 
-          salon_id = '1' AND
+          salon_id = ${salonId} AND
           booking_date >= '${startDate.toISOString()}' AND 
           booking_date <= '${temp_date.toISOString()}'
       `);
-          
+
       const dailyResult = await connection.all(`
         SELECT 
           strftime('%Y-%m-%d', booking_date) AS date,
@@ -151,7 +243,7 @@ export class AnalyticsManagerService {
           SUM(price) AS amount
           FROM parquet_data
         WHERE 
-          salon_id = '1' AND
+          salon_id = ${salonId} AND
           booking_date >= '${startDate.toISOString()}' AND 
           booking_date <= '${temp_date.toISOString()}'
         GROUP BY date
@@ -183,6 +275,8 @@ export class AnalyticsManagerService {
   async downloadData(metricDto: MetricsDto) {
     const startDate = new Date(metricDto.start_date);
     const endDate = new Date(metricDto.end_date);
+    const salonId = metricDto.salon_id;
+
     this.logger.log(
       `📂 Downloading data from ${startDate.toDateString()} to ${endDate.toDateString()}`
     );
@@ -221,7 +315,7 @@ export class AnalyticsManagerService {
         if (
           recordDate >= startDate &&
           recordDate <= endDate &&
-          record.salon_id === 1
+          record.salon_id === salonId
         ) {
           allRows.push(record);
         }
@@ -230,7 +324,9 @@ export class AnalyticsManagerService {
     }
 
     if (allRows.length === 0) {
-      this.logger.error(`🔴 No se encontraron datos que cumplan con los filtros.`);
+      this.logger.error(
+        `🔴 No se encontraron datos que cumplan con los filtros.`
+      );
       throw new HttpException('No se encontraron datos.', HttpStatus.NOT_FOUND);
     }
 

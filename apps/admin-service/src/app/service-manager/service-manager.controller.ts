@@ -4,6 +4,7 @@ import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
+import { MessagePattern } from '@nestjs/microservices';
 class GetServicesBySalonDto {
   salon_id: number;
 }
@@ -39,6 +40,22 @@ export class ServiceController {
   @Get('get-all')
   async getAllServices(): Promise<Service[]> {
     return await this.serviceManagerService.getAllServices();
+  }
+
+  @MessagePattern('get-all-services-for-analytics')
+  async getAllServicesForAnalytics(@Body() body: GetServicesBySalonDto): Promise<Service[]> {
+    const { salon_id } = body;
+
+    try {
+      const services = await this.serviceManagerService.getServicesBySalonIdAndCategoryId(salon_id);
+      return services;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch services for salon');
+    }
+    // return await this.serviceManagerService.getAllServices();
   }
 
   @UseGuards(JwtAuthGuard)
