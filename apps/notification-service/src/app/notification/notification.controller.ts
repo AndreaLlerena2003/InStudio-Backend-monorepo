@@ -183,7 +183,12 @@ export class NotificationController {
       }
       Logger.log('Recibiendo peticiones', JSON.stringify(req.user));
       const notifications = await this.notificationService.getRecentNotificationsForUser(userId);
-      return { success: true, message: 'Notificaciones obtenidas exitosamente', data: notifications };
+      Logger.log('Notificaciones obtenidas', JSON.stringify(notifications));
+      return {
+        success: true,
+        message: 'Notificaciones obtenidas exitosamente',
+        data: notifications // Eliminado el campo duplicado 'notifications'
+      };
     } catch (error) {
       Logger.error('Error en getInitialNotifications', error);
       throw new HttpException(

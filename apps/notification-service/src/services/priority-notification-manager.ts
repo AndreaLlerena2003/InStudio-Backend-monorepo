@@ -134,6 +134,7 @@ export class PriorityNotificationManager extends NotificationManager {
           notificationDto.service = data.service;
 
           await this.notificationRepository.create(notificationDto);
+          Logger.log('✅ Notificación de recordatorio enviada');
         }
         break;
 
