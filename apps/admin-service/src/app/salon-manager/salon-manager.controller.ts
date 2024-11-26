@@ -8,6 +8,7 @@ import { Salon } from '@backend-in-studio/db-manager-admin';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
+import { Cron } from '@nestjs/schedule'; 
 @Controller('salon-manager')
 export class SalonManagerController {
   private readonly logger = new Logger();
@@ -47,6 +48,15 @@ export class SalonManagerController {
     }
   }
 
+  @Cron('0 2 * * 0')  
+  async fillSchedules() {
+    try {
+      await this.salonManagerService.getAllSalonsIdAndSchedulesAndSendToReservation();
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
 
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
@@ -76,6 +86,10 @@ export class SalonManagerController {
     @Body() weeklyScheduleDto: CreateWeeklyScheduleDto,
   ): Promise<void> {
     await this.salonManagerService.addWeeklySchedule(weeklyScheduleDto);
+  }
+
+  async cronAddingWeeklySchedulesForAllSalons(){
+
   }
 
 
