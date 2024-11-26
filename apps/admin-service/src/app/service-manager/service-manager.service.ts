@@ -6,6 +6,7 @@ import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { Subcategory } from '@backend-in-studio/db-manager-admin';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { Category } from '@backend-in-studio/db-manager-admin';
+import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
 @Injectable()
 export class ServiceManagerService {
   private readonly logger = new Logger(ServiceManagerService.name);
@@ -16,6 +17,7 @@ export class ServiceManagerService {
     @InjectModel(Subcategory)
     private readonly subcategoryService: typeof Subcategory,
     private readonly kafkaService: KafkaService,
+    private readonly s3Service: S3Service
   ) {
   }
 
@@ -187,5 +189,29 @@ export class ServiceManagerService {
       throw new InternalServerErrorException('Failed to update service');
     }
   }
+
+  async updateUserProfilePhoto(id: string, file: Express.Multer.File) {
+    try {
+        const service = await this.serviceService.findByPk(id);
+        if (!service) {
+            throw new NotFoundException(`Service with ID ${id} not found`);
+        }
+        const actualPhoto = service.photo;
+        if (actualPhoto && actualPhoto.trim() !== '') {
+            await this.s3Service.deleteFile(actualPhoto);
+        }
+        const filePath = `admin/services_photo_url/${id}`;
+        const finalPath = await this.s3Service.uploadFile(file, filePath);
+        service.photo = finalPath;
+        await service.save();
+        this.logger.log(`User with ID ${id} successfully updated profile photo`);
+        return { profilePhotoUrl: finalPath };
+    } catch (error) {
+        this.logger.error(`Error updating profile photo for user with ID ${id}`, error);
+        throw new InternalServerErrorException('Error updating profile photo');
+    }
+  }
+
+  
   
 }
