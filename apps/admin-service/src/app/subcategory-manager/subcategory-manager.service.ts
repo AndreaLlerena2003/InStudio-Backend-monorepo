@@ -29,8 +29,6 @@ export class SubcategoryManagerService {
     }
   }  
 
-<<<<<<< HEAD
-=======
 
   async getAllSubcategories(): Promise<Subcategory[]> {
     try {
@@ -45,6 +43,5 @@ export class SubcategoryManagerService {
     }
   }
 
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   
 }

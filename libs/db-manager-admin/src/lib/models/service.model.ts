@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement} from 'sequelize-typescript';
-=======
 import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { Salon } from './salons.model';
 import { Subcategory } from './subcategory.model';  // Asegúrate de importar Subcategory
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 
 @Table({
   tableName: 'services',
@@ -28,12 +24,6 @@ export class Service extends Model<Service> {
 
   @Column({
     type: DataType.STRING,
-<<<<<<< HEAD
-    allowNull: false,
-  })
-  declare photo: string;
-  
-=======
     allowNull: true,
   })
   declare photo: string;
@@ -51,5 +41,4 @@ export class Service extends Model<Service> {
 
   @BelongsTo(() => Subcategory)  
   declare subcategory: Subcategory;
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 }

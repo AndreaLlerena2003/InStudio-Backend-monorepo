@@ -24,10 +24,6 @@ import { firstValueFrom } from 'rxjs';
           this.kafkaClient.send('validate_user', { Authentication: authentication }),
         );
         this.addUser(user, context);
-<<<<<<< HEAD
-        const externalId = user?.external_id; 
-=======
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
         return true;
       } catch {
         throw new UnauthorizedException(); 
@@ -57,18 +53,9 @@ import { firstValueFrom } from 'rxjs';
     }
 
     async onModuleInit() {
-<<<<<<< HEAD
-      console.log('Connecting to Kafka...');
-      try {
-          console.log('Iniciando');
-          await this.kafkaClient.subscribeToResponseOf('validate_user');
-          await this.kafkaClient.subscribeToResponseOf('validate_user.reply');
-          console.log('Connected to Kafka');
-=======
       try {
           await this.kafkaClient.subscribeToResponseOf('validate_user');
           await this.kafkaClient.subscribeToResponseOf('validate_user.reply');
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
       } catch (error) {
           console.error('Failed to connect to Kafka', error);
       }

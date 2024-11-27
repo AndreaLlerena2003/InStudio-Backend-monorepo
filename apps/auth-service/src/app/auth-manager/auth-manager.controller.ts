@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Res } from '@nestjs/common';
-=======
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Res, Req } from '@nestjs/common';
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 import { AuthManagerService } from './auth-manager.service';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { RegisterAdminDto } from '../dto/register-admin.dto';
@@ -11,13 +7,8 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { Response } from 'express';
 import { AuthUsers } from '@backend-in-studio/db-manager-auth';
-<<<<<<< HEAD
-import { MessagePattern } from '@nestjs/microservices';
-
-=======
 import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
 import {JwtAuthGuard} from '@backend-in-studio/auth-lib';
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 @Controller('auth-manager')
 export class AuthManagerController {
     constructor(
@@ -69,9 +60,6 @@ export class AuthManagerController {
     async validateAdmin(data: { Authentication: string }) {
         return this.authManagerService.validateToken(data, 1);
     }
-<<<<<<< HEAD
-}
-=======
 
     @MessagePattern('get_email')
     async getEmail(userId: string) {
@@ -97,4 +85,3 @@ export class AuthManagerController {
         response.sendStatus(200);
     }
 }
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e

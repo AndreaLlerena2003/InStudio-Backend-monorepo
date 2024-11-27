@@ -108,17 +108,10 @@ export class S3Service {
             const { Contents } = await this.s3Client.send(command);
             const fileKeys = Contents ? Contents.map(item => item.Key).filter((key): key is string => key !== undefined) : [];
     
-<<<<<<< HEAD
-            this.logger.log(`Files retrieved successfully from S3 bucket: ${fileKeys.length} files found.`);
-            return fileKeys;
-        } catch (error) {
-            this.logger.error(`Error listing files from S3: ${error}`);
-=======
             this.logger.log(`📂 Files retrieved successfully from S3 bucket: ${fileKeys.length} files found.`);
             return fileKeys;
         } catch (error) {
             this.logger.error(`🔴 Error listing files from S3: ${error}`);
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
             throw new InternalServerErrorException('Failed to list files from S3');
         }
     }

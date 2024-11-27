@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Controller, Post, Body, InternalServerErrorException, UploadedFile,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
-=======
 import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
@@ -35,21 +31,11 @@ export class SalonManagerController {
 
 
   @UseGuards(JwtAuthGuard)
-<<<<<<< HEAD
-  @Get()
-=======
   @Get('get-salon-by-admin')
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   async getSalonsByAdmin(@Req() req: any): Promise<Salon[]> {
     try {
       const adminId = req.user?.userId;
       const response = await this.salonManagerService.getSalonsByAdminId(adminId);
-<<<<<<< HEAD
-      return response;
-    } catch (error) {
-      this.logger.error('Error creating salon', error);
-      throw new InternalServerErrorException('Failed to create salon');
-=======
       
       if (!response.length) {
         this.logger.log(`No salons found for admin ID: ${adminId}`);
@@ -84,18 +70,13 @@ export class SalonManagerController {
     } catch (error) {
       this.logger.error('Error fetching salons', error);
       throw new InternalServerErrorException('Failed to fetch salons');
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     }
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
   @UseInterceptors(FileInterceptor('file'))
-<<<<<<< HEAD
-  async updateUserProfilePhoto(@Body() salonId: string, @UploadedFile() file: Express.Multer.File) {
-=======
   async updateUserProfilePhoto(@Body('salonId') salonId: number, @UploadedFile() file: Express.Multer.File) {
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     if (!file) {
       throw new BadRequestException('Profile photo file is required');
     }
@@ -114,8 +95,6 @@ export class SalonManagerController {
     }
   }
 
-<<<<<<< HEAD
-=======
   @Post('banner-photos')
   @UseInterceptors(FilesInterceptor('files'))
   async updateBannerPhotos(
@@ -181,7 +160,6 @@ export class SalonManagerController {
     return await this.salonManagerService.editSalon(updateSalonDto);
   }
 
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 
  
 }

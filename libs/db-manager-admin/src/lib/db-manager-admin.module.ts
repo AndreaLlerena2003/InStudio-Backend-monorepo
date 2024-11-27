@@ -26,56 +26,23 @@ export class DbManagerModuleAdmin implements OnModuleInit {
   }
 
   private defineRelationships() {
-<<<<<<< HEAD
-    Admin.hasOne(Salon, {
-      foreignKey: 'adminId',
-      as: 'salons',
-    });
-=======
     Admin.hasMany(Salon, {
       foreignKey: 'adminId',
       as: 'salons',
     });
 
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     Salon.belongsTo(Admin, {
       foreignKey: 'adminId',
       as: 'admin',
     });
 
-<<<<<<< HEAD
-    Category.hasMany(Subcategory, {
-      foreignKey: 'categoryId',
-      as: 'subcategories',
-    });
-    Subcategory.belongsTo(Category, {
-      foreignKey: 'categoryId',
-      as: 'category',
-    });
-
-    Subcategory.hasMany(Service, {
-      foreignKey: 'subcategoryId',
-      as: 'services',
-    });
-    Service.belongsTo(Subcategory, {
-      foreignKey: 'subcategoryId',
-      as: 'subcategory',
-    });
-
-    Salon.hasMany(Service, {
-=======
    /* Salon.hasMany(Service, {
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
       foreignKey: 'salon_id',
       as: 'services',
     });
     Service.belongsTo(Salon, {
       foreignKey: 'salon_id',
       as: 'salons',
-<<<<<<< HEAD
-    });
-=======
     });*/
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   }
 }

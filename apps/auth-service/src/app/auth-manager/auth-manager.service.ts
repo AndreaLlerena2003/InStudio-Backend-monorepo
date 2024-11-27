@@ -43,10 +43,6 @@ export class AuthManagerService {
             external_id,
         });
 
-<<<<<<< HEAD
-        // Evento original para el servicio de usuarios
-=======
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
         this.kafkaService.sendEvent(
             {
                 id: external_id,
@@ -57,19 +53,6 @@ export class AuthManagerService {
             'userRegistered',
         );
 
-<<<<<<< HEAD
-        // Nuevo evento específico para notificaciones
-        this.kafkaService.sendEvent(
-            {
-                email: registerUserDto.email,
-                userId: external_id,
-                userName: registerUserDto.name
-            },
-            'userRegisteredNotification',
-        );
-
-=======
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
         return {
             message: 'User registered successfully',
             userId: newUser.external_id,
@@ -162,12 +145,6 @@ export class AuthManagerService {
 
         return { userId, role };
     }
-<<<<<<< HEAD
-}
-
-
-
-=======
 
     async changePasswordByExternalId(external_id: string, newPassword: string) {
         if (!newPassword || newPassword.trim().length < 6) {
@@ -202,4 +179,3 @@ export class AuthManagerService {
         response.clearCookie('Authentication');
     }
 }
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e

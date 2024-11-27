@@ -25,10 +25,6 @@ export class SalonManagerService {
     @InjectModel(Admin)
     private readonly adminService: typeof Admin,
   ) {
-<<<<<<< HEAD
-    this.kafkaService.init();
-=======
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   }
 
   async createSalon(createSalonDto: CreateSalonDto): Promise<Salon> {
@@ -45,8 +41,6 @@ export class SalonManagerService {
     }
   }  
 
-<<<<<<< HEAD
-=======
   async getAllSalonsIdAndSchedulesAndSendToReservation() {
     try {
         const salons = await this.salonService.findAll({
@@ -69,27 +63,12 @@ export class SalonManagerService {
         throw new Error('Failed to fetch salons and schedules');
     }
   }
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   
   async getSalonsByAdminId(adminId: string): Promise<Salon[]> {
     try {
       const salons = await this.salonService.findAll({
         include: [
           {
-<<<<<<< HEAD
-            model: Admin,  
-            as: 'admin',   
-            where: { id: adminId },
-            required: true, 
-          }
-        ]
-      });
-
-      if (!salons.length) {
-        throw new NotFoundException('No salons found for the given admin ID');
-      }
-
-=======
             model: Admin,
             attributes: [],
             as: 'admin',
@@ -99,7 +78,6 @@ export class SalonManagerService {
         ],
       });
   
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
       this.logger.log(`Found ${salons.length} salons for admin ID: ${adminId}`);
       return salons;
     } catch (error) {
@@ -108,9 +86,6 @@ export class SalonManagerService {
     }
   }
 
-<<<<<<< HEAD
-  async updateSalonProfilePhoto(id: string, file: Express.Multer.File) {
-=======
 
   async getSalonBySalonId(salon_id:number): Promise<Salon>{
     try{
@@ -125,7 +100,6 @@ export class SalonManagerService {
   
 
   async updateSalonProfilePhoto(id: number, file: Express.Multer.File) {
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     try {
         const salon = await this.salonService.findByPk(id);
         if (!salon) {
@@ -147,8 +121,6 @@ export class SalonManagerService {
     }
   }
 
-<<<<<<< HEAD
-=======
   async updateSalonBannerPhotos(id: string, files: Express.Multer.File[]) {
     try {
         const salon = await this.salonService.findByPk(id);
@@ -323,6 +295,5 @@ async deleteSalonBannerPhoto(id: string, photoUrl: string) {
   }
 
  
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   
 }
