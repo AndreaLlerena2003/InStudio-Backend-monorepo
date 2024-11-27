@@ -26,7 +26,11 @@ export class UserManagerController {
 
     @UseGuards(JwtAuthGuard)
     @Get('get-user-data')
+<<<<<<< HEAD
     async getUserData(@Req() req: any): Promise<User> {
+=======
+    async getUserData(@Req() req: any): Promise<any> {
+>>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     const externalId = req.user?.userId;
     try {
       return await this.userManagerService.getUserData(externalId);
@@ -62,6 +66,26 @@ export class UserManagerController {
   }
 
   @UseGuards(JwtAuthGuard)
+<<<<<<< HEAD
+=======
+  @Patch('update-pasword')
+  async updateUserPassword(@Req() req: any,  @Body('newPassword') newPassword: string) {
+    const userId = req.user?.userId;
+    if (!newPassword) {
+      throw new BadRequestException('NewPassword is required');
+    }
+    try {
+        await this.userManagerService.updatePassword(newPassword,userId);
+      } catch (error) {
+      if (error instanceof HttpException) {
+          throw error;
+      }
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+>>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
   @Patch('update-user-photo')
   @UseInterceptors(FileInterceptor('file'))
   async updateUserProfilePhoto(@Req() req: any, @UploadedFile() file: Express.Multer.File) {

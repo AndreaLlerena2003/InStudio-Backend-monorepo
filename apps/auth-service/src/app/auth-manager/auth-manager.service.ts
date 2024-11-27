@@ -43,7 +43,10 @@ export class AuthManagerService {
             external_id,
         });
 
+<<<<<<< HEAD
         // Evento original para el servicio de usuarios
+=======
+>>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
         this.kafkaService.sendEvent(
             {
                 id: external_id,
@@ -54,6 +57,7 @@ export class AuthManagerService {
             'userRegistered',
         );
 
+<<<<<<< HEAD
         // Nuevo evento específico para notificaciones
         this.kafkaService.sendEvent(
             {
@@ -64,6 +68,8 @@ export class AuthManagerService {
             'userRegisteredNotification',
         );
 
+=======
+>>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
         return {
             message: 'User registered successfully',
             userId: newUser.external_id,
@@ -156,7 +162,44 @@ export class AuthManagerService {
 
         return { userId, role };
     }
+<<<<<<< HEAD
 }
 
 
 
+=======
+
+    async changePasswordByExternalId(external_id: string, newPassword: string) {
+        if (!newPassword || newPassword.trim().length < 6) {
+            throw new UnprocessableEntityException('Password must be at least 6 characters long.');
+        }
+        const user = await this.authService.findOne({
+            where: { external_id },
+        });
+        if (!user) {
+            throw new UnauthorizedException('User not found.');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        return {
+            message: 'Password successfully changed.',
+        };
+    }
+
+    async getUserEmailByExternalId(userId: string) {
+        if (typeof userId !== 'string') {
+            throw new Error(`Invalid userId type. Expected string, received ${typeof userId}`);
+        }
+    
+        const user = await this.authService.findOne({
+            where: { external_id: userId },
+        });
+        return user.email;
+    }
+
+    async logout(response: Response) {
+        response.clearCookie('Authentication');
+    }
+}
+>>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
