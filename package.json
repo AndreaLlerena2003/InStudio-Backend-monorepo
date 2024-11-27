@@ -67,10 +67,7 @@
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
-<<<<<<< HEAD
     "@types/aws-sdk": "^2.7.4",
-=======
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.12",
