@@ -48,6 +48,21 @@ export class SalonManagerController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('get-salon-by-salonId')
+  async getSalonsBySalonId(@Body('salonId') salonid: number ): Promise<Salon> {
+    try {
+      const response = await this.salonManagerService.getSalonBySalonId(salonid);
+      if (!response) {
+        this.logger.log(`No salons found for admin ID`);
+      }
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
+
   @Cron('0 2 * * 0')  
   async fillSchedules() {
     try {
