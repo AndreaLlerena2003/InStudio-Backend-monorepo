@@ -33,6 +33,24 @@ export class BookingService {
         }
     }
 
+    async getAllBookingsByUserId(user_id: string){
+        const filterQuery = { user_id };
+        const result = await this.bookingRepository.find(filterQuery);
+        if(!result){
+            this.logger.warn(`This user do not have bookings`);
+        }
+        return result;
+    }
+
+    async getBookingByBookingUUID(bookingUUID: string){
+        const filterQuery = { bookingUUID };
+        const result = await this.bookingRepository.find(filterQuery);
+        if(!result){
+            this.logger.warn(`This user do not have bookings`);
+        }
+        return result;
+    }
+
     async updateAsCompleted(bookingUUID: string) {
         const filterQuery = { bookingUUID };
         const updateData = { status: 'COMPLETED' };
