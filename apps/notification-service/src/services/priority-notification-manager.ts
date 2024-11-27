@@ -4,6 +4,8 @@ import { DistributedPriorityQueue } from './distributed-priority-queue';
 import { Cron } from '@nestjs/schedule';
 import { NotificationRepository } from '../app/notification/notification.repository';
 import { CreateNotificationDto } from '../app/dto/notification.dto';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 export interface NotificationQueueData {
   notificationType: string;
@@ -25,7 +27,8 @@ export class PriorityNotificationManager extends NotificationManager {
   private priorityQueue: DistributedPriorityQueue;
 
   constructor(
-    notificationRepository: NotificationRepository
+    notificationRepository: NotificationRepository,
+    private readonly httpService: HttpService
   ) {
     super(notificationRepository);
     this.priorityQueue = new DistributedPriorityQueue();
@@ -113,26 +116,43 @@ export class PriorityNotificationManager extends NotificationManager {
     switch (notificationType) {
       case 'Reminder':
         if (data.beauty_salon_id && data.date && data.time_str && data.service) {
+          // Obtener nombre del salón
+          let salonName = 'Nombre no disponible';
+          try {
+            const response = await lastValueFrom(
+              this.httpService.get(`http://admin-service/salon-manager/get-salon-by-salonId`, {
+                params: { salonId: data.beauty_salon_id }
+              })
+            );
+            salonName = response.data.name;
+          } catch (error) {
+            Logger.error(`Error al obtener el nombre del salón con ID ${data.beauty_salon_id}`, error);
+          }
+
+          // Añadir salonName a data
+          data.salonName = salonName;
+
           await this.send_reminder_notification(
             email,
             userId,
             data.beauty_salon_id,
             data.date,
             data.time_str,
-            data.service
+            data.service,
+            salonName // Pasar el nombre del salón si es necesario
           );
-          
+
+          // Guardar la notificación con salonName
           const notificationDto = new CreateNotificationDto();
           notificationDto.userId = userId;
           notificationDto.email = email;
           notificationDto.typeBehavior = 'Reminder';
-          notificationDto.beautySalonId = data.beauty_salon_id;
+          notificationDto.salonName = salonName; // Usar salonName
           notificationDto.active = true;
           notificationDto.status = 'Enviado';
           notificationDto.date = data.date;
           notificationDto.time = data.time_str;
           notificationDto.service = data.service;
-
           await this.notificationRepository.create(notificationDto);
           Logger.log('✅ Notificación de recordatorio enviada');
         }
@@ -140,25 +160,42 @@ export class PriorityNotificationManager extends NotificationManager {
 
       case 'Offer':
         if (data.beauty_salon_id && data.offer_id && data.description) {
+          // Obtener nombre del salón
+          let salonName = 'Nombre no disponible';
+          try {
+            const response = await lastValueFrom(
+              this.httpService.get(`http://admin-service/salon-manager/get-salon-by-salonId`, {
+                params: { salonId: data.beauty_salon_id }
+              })
+            );
+            salonName = response.data.name;
+          } catch (error) {
+            Logger.error(`Error al obtener el nombre del salón con ID ${data.beauty_salon_id}`, error);
+          }
+
+          // Añadir salonName a data
+          data.salonName = salonName;
+
           await this.send_offer_notification(
             userId,
             email,
             data.beauty_salon_id,
             data.offer_id,
-            data.description
+            data.description,
+            salonName
           );
 
           const notificationDto = new CreateNotificationDto();
           notificationDto.userId = userId;
           notificationDto.email = email;
           notificationDto.typeBehavior = 'Offer';
-          notificationDto.beautySalonId = data.beauty_salon_id;
+          notificationDto.salonName = salonName; // Usar salonName
           notificationDto.active = true;
           notificationDto.status = 'Enviado';
           notificationDto.offerId = data.offer_id;
           notificationDto.description = data.description;
-
           await this.notificationRepository.create(notificationDto);
+          Logger.log('✅ Notificación de oferta enviada');
         }
         break;
 

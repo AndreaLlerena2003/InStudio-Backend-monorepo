@@ -11,6 +11,7 @@ export type INotification = {
   Email: string;
   TypeBehavior: 'Subscription' | 'Reminder' | 'Offer';
   BeautySalonID: string;
+  salonName?: string; // Agregar este campo
   Active: boolean;
   Status: 'Pendiente' | 'Enviado' | 'Error';
   Date?: string;

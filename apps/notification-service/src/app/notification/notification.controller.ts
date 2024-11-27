@@ -3,10 +3,16 @@ import { NotificationService } from './notification.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib'; 
 import { ResultDto } from '../dto/notification.dto';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly httpService: HttpService // Agregar HttpService
+  ) {}
+
   @EventPattern('reservation-created')
   async handleReservationCreated(@Payload() data: {
     email: string,
@@ -182,12 +188,34 @@ export class NotificationController {
         throw new BadRequestException('userId es requerido');
       }
       Logger.log('Recibiendo peticiones', JSON.stringify(req.user));
+
       const notifications = await this.notificationService.getRecentNotificationsForUser(userId);
       Logger.log('Notificaciones obtenidas', JSON.stringify(notifications));
+
+      // Filtrar y mapear las notificaciones
+      const filteredNotifications = notifications
+        .filter(n => n.TypeBehavior === 'Offer' || n.TypeBehavior === 'Reminder')
+        .map(n => {
+          const resultDto = new ResultDto();
+          if (n.TypeBehavior === 'Reminder' || n.TypeBehavior === 'Offer') {
+            resultDto.typeBehavior = n.TypeBehavior;
+          }
+          resultDto.salonName = n.salonName; // Reemplazar beautySalonId con salonName
+
+          if (n.TypeBehavior === 'Reminder') {
+            resultDto.date = n.Date;
+            resultDto.time = n.Time;
+            resultDto.service = n.Service;
+          } else if (n.TypeBehavior === 'Offer') {
+            resultDto.description = n.Description;
+          }
+          return resultDto;
+        });
+
       return {
         success: true,
         message: 'Notificaciones obtenidas exitosamente',
-        data: notifications // Eliminado el campo duplicado 'notifications'
+        data: filteredNotifications
       };
     } catch (error) {
       Logger.error('Error en getInitialNotifications', error);

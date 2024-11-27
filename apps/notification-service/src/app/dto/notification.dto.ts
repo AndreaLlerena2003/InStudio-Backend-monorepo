@@ -2,21 +2,27 @@ import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional } from 'class-valid
 
 export class ResultDto {
   @IsString()
-  date: string;
+  typeBehavior: 'Reminder' | 'Offer';
 
   @IsString()
-  time: string;
+  @IsNotEmpty()
+  salonName: string;
 
   @IsString()
-  service: string;
+  @IsOptional()
+  date?: string;
 
   @IsString()
-  description: string;
+  @IsOptional()
+  time?: string;
 
   @IsString()
-  salonId: string;
-  
-  // Opcional: agregar campos adicionales si es necesario
+  @IsOptional()
+  service?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 }
 
 export class CreateNotificationDto {
