@@ -33,24 +33,38 @@ export class BookingService {
         }
     }
 
-    async getAllBookingsByUserId(user_id: string){
-        const filterQuery = { user_id };
-        const result = await this.bookingRepository.find(filterQuery);
-        if(!result){
-            this.logger.warn(`This user do not have bookings`);
+    async getAllBookingsByUserId(user_id: string) {
+        try {
+            const filterQuery = { user_id };
+            const result = await this.bookingRepository.find(filterQuery);
+    
+            if (result.length === 0) {
+                this.logger.warn(`No bookings found for user with ID: ${user_id}`);
+            }
+    
+            return result;
+        } catch (error) {
+            this.logger.error(`Error fetching bookings for user ID: ${user_id}`, error.stack);
+            throw new Error(`Unable to retrieve bookings for user ID: ${user_id}`);
         }
-        return result;
     }
-
-    async getBookingByBookingUUID(bookingUUID: string){
-        const filterQuery = { bookingUUID };
-        const result = await this.bookingRepository.find(filterQuery);
-        if(!result){
-            this.logger.warn(`This user do not have bookings`);
+    
+    async getBookingByBookingUUID(bookingUUID: string) {
+        try {
+            const filterQuery = { bookingUUID };
+            const result = await this.bookingRepository.findOne(filterQuery);
+    
+            if (!result) {
+                this.logger.warn(`No booking found for bookingUUID: ${bookingUUID}`);
+            }
+    
+            return result;
+        } catch (error) {
+            this.logger.error(`Error fetching booking for bookingUUID: ${bookingUUID}`, error.stack);
+            throw new Error(`Unable to retrieve booking for bookingUUID: ${bookingUUID}`);
         }
-        return result;
     }
-
+    
     async updateAsCompleted(bookingUUID: string) {
         const filterQuery = { bookingUUID };
         const updateData = { status: 'COMPLETED' };
