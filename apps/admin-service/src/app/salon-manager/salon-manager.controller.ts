@@ -1,13 +1,14 @@
-import { Controller, Post, Body, InternalServerErrorException, UploadedFile,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { SalonManagerService } from './salon-manager.service';
 import { CreateSalonDto } from '../dto/create-salon-dto';
 import { Salon } from '@backend-in-studio/db-manager-admin';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor , FilesInterceptor } from '@nestjs/platform-express';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
+import { Cron } from '@nestjs/schedule'; 
 @Controller('salon-manager')
 export class SalonManagerController {
   private readonly logger = new Logger();
@@ -47,11 +48,35 @@ export class SalonManagerController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('get-salon-by-salonId')
+  async getSalonsBySalonId(@Body('salonId') salonid: number ): Promise<Salon> {
+    try {
+      const response = await this.salonManagerService.getSalonBySalonId(salonid);
+      if (!response) {
+        this.logger.log(`No salons found for admin ID`);
+      }
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
+
+  @Cron('0 2 * * 0')  
+  async fillSchedules() {
+    try {
+      await this.salonManagerService.getAllSalonsIdAndSchedulesAndSendToReservation();
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
 
   @UseGuards(JwtAuthGuard)
   @Patch('update-salon-photo')
   @UseInterceptors(FileInterceptor('file'))
-  async updateUserProfilePhoto(@Body() salonId: string, @UploadedFile() file: Express.Multer.File) {
+  async updateUserProfilePhoto(@Body('salonId') salonId: number, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Profile photo file is required');
     }
@@ -70,6 +95,48 @@ export class SalonManagerController {
     }
   }
 
+  @Post('banner-photos')
+  @UseInterceptors(FilesInterceptor('files'))
+  async updateBannerPhotos(
+    @Body('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    if (!id) {
+      throw new BadRequestException('Salon ID is required');
+    }
+    return this.salonManagerService.updateSalonBannerPhotos(id, files);
+  }
+
+  @Patch('banner-photos')
+  @UseInterceptors(FileInterceptor('newFile'))
+  async replaceBannerPhoto(
+    @Body('id') id: string,
+    @Body('oldPhotoUrl') oldPhotoUrl: string,
+    @UploadedFile() newFile: Express.Multer.File,
+  ) {
+    if (!id) {
+      throw new BadRequestException('Salon ID is required');
+    }
+    if (!oldPhotoUrl) {
+      throw new BadRequestException('Old photo URL is required');
+    }
+    return this.salonManagerService.replaceSalonBannerPhoto(id, oldPhotoUrl, newFile);
+  }
+
+  @Delete('banner-photos')
+  async deleteBannerPhoto(
+    @Body('id') id: string,
+    @Body('photoUrl') photoUrl: string,
+  ) {
+    if (!id) {
+      throw new BadRequestException('Salon ID is required');
+    }
+    if (!photoUrl) {
+      throw new BadRequestException('Photo URL is required');
+    }
+    return this.salonManagerService.deleteSalonBannerPhoto(id, photoUrl);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('add-weekly-schedule')
   async addWeeklySchedule(
@@ -77,6 +144,12 @@ export class SalonManagerController {
   ): Promise<void> {
     await this.salonManagerService.addWeeklySchedule(weeklyScheduleDto);
   }
+
+  async cronAddingWeeklySchedulesForAllSalons(){
+
+  }
+
+  
 
 
   @UseGuards(JwtAuthGuard)
