@@ -16,6 +16,7 @@ export class UserManagerService implements OnModuleInit {
         private readonly s3Service: S3Service,
         @Inject('auth-client') private readonly kafkaClient: ClientKafka
     ) {
+        
         this.kafkaService.init();
     }
 
@@ -154,6 +155,8 @@ export class UserManagerService implements OnModuleInit {
     async onModuleInit() {
         this.logger.log('Connecting to Kafka...');
         try {
+            this.kafkaClient.subscribeToResponseOf('validate_user');
+            this.kafkaClient.subscribeToResponseOf('validate_user.reply');
             await this.kafkaClient.subscribeToResponseOf('get_email');
             this.logger.log('Connected to Kafka');
         } catch (error) {
