@@ -63,7 +63,7 @@ export class ServiceController {
     // return await this.serviceManagerService.getAllServices();
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Post('get-services-by-salon')
   async getServicesBySalonId(@Body() body: GetServicesBySalonDto): Promise<Service[]> {
     const { salon_id } = body;
