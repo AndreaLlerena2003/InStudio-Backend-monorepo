@@ -7,6 +7,7 @@ import { Subcategory } from '@backend-in-studio/db-manager-admin';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { Category } from '@backend-in-studio/db-manager-admin';
 import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
+
 @Injectable()
 export class ServiceManagerService {
   private readonly logger = new Logger(ServiceManagerService.name);
@@ -17,7 +18,9 @@ export class ServiceManagerService {
     @InjectModel(Subcategory)
     private readonly subcategoryService: typeof Subcategory,
     private readonly kafkaService: KafkaService,
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
+    @InjectModel(Salon)
+    private readonly salonService: typeof Salon,
   ) {
   }
 
@@ -46,25 +49,42 @@ export class ServiceManagerService {
   }
 
 
-  async getServiceById(serviceId: number): Promise<Service> {
+  async getServiceById(serviceId: number): Promise<any> {
     try {
-      const service = await this.serviceService.findByPk(serviceId, {
-        include: [
-          {
-            model: Subcategory,
-            as: 'subcategory', 
-          },
-        ],
-      });
-  
-      if (!service) {
-        this.logger.warn(`Service with ID ${serviceId} not found.`);
-        throw new NotFoundException(`Service with ID ${serviceId} not found`);
-      }
-      return service;
+        const service = await this.serviceService.findByPk(serviceId, {
+            include: [
+                {
+                    model: Subcategory,
+                    as: 'subcategory',
+                    include: [
+                        {
+                            model: Category,
+                            as: 'category',
+                        },
+                    ],
+                },
+            ],
+        });
+
+        if (!service) {
+            this.logger.warn(`Service with ID ${serviceId} not found.`);
+            throw new NotFoundException(`Service with ID ${serviceId} not found`);
+        }
+
+        const mappedService = {
+            categoryId: service.subcategory.category.id,
+            categoryName: service.subcategory.category.name,
+            subcategoryId: service.subcategory.id,
+            subcategoryName: service.subcategory.name,
+            serviceId: service.id,
+            salonId: service.salon_id, 
+            price: service.price,
+        };
+
+        return mappedService;
     } catch (error) {
-      this.logger.error('Error retrieving service by ID', error.stack);
-      throw new InternalServerErrorException('Failed to fetch service');
+        this.logger.error('Error retrieving service by ID', error.stack);
+        throw new InternalServerErrorException('Failed to fetch service');
     }
   }
 
@@ -212,6 +232,113 @@ export class ServiceManagerService {
     }
   }
 
-  
-  
+
+  async getalonAndServiceDataById(data: Array<{ salon_id: number, service_id: number }>): Promise<any> {
+    try {
+        const salonDataPromises = data.map(async (entry) => {
+            const salonId = entry.salon_id;
+            const serviceId = entry.service_id;
+            const salon = await this.salonService.findByPk(salonId, {
+                include: [
+                    {
+                        model: Service,
+                        as: 'services',
+                        where: { id: serviceId },
+                        include: [
+                            {
+                                model: Subcategory,
+                                as: 'subcategory',
+                                include: [
+                                    {
+                                        model: Category,
+                                        as: 'category',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            if (!salon) {
+                this.logger.warn(`Salon with ID ${salonId} not found.`);
+                throw new NotFoundException(`Salon with ID ${salonId} not found`);
+            }
+
+            const service = salon.services?.find((s) => s.id === serviceId);
+
+            if (!service) {
+                this.logger.warn(`Service with ID ${serviceId} not found for salon_id ${salonId}`);
+                throw new NotFoundException(`Service with ID ${serviceId} not found for this salon`);
+            }
+
+            const mappedData = {
+                salonId: salon.id,
+                salonName: salon.name, 
+                serviceId: service.id,
+                price: service.price,
+                subcategory: {
+                    id: service.subcategory.id,
+                    name: service.subcategory.name,
+                    category: {
+                        id: service.subcategory.category.id,
+                        name: service.subcategory.category.name,
+                    },
+                },
+            };
+
+            return mappedData;
+        });
+        const salonData = await Promise.all(salonDataPromises);
+
+        return salonData;
+    } catch (error) {
+        this.logger.error('Error retrieving salon and service data by IDs', error.stack);
+        throw new InternalServerErrorException('Failed to fetch salon and service data');
+    }
+  }
+
+
+  async getServicesIdData(serviceIds: number[]): Promise<any> {
+    try {
+        const servicesData = await Promise.all(serviceIds.map(async (serviceId) => {
+            const serviceData = await this.getServiceById(serviceId);
+            return serviceData;
+        }));
+        const groupedData = servicesData.reduce((acc, service) => {
+            const salonId = service.salonId; 
+            if (!acc[salonId]) {
+                acc[salonId] = {
+                    salonId,
+                    categories: []
+                };
+            }
+
+            let category = acc[salonId].categories.find(cat => cat.categoryId === service.categoryId);
+            if (!category) {
+                category = {
+                    categoryId: service.categoryId,
+                    categoryName: service.categoryName, 
+                    services: []
+                };
+                acc[salonId].categories.push(category);
+            }
+            category.services.push({
+                subcategoryId: service.subcategoryId,
+                subcategoryName: service.subcategoryName, 
+                serviceId: service.serviceId,
+                price: service.price
+            });
+
+            return acc;
+        }, {});
+        return groupedData;
+    } catch (error) {
+        this.logger.error('Error retrieving services by IDs', error.stack);
+        throw new InternalServerErrorException('Failed to fetch service data');
+    }
+  }
+
+
+
 }

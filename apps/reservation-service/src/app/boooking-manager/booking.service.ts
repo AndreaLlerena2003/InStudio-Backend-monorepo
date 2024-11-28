@@ -1,12 +1,14 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, OnModuleInit } from '@nestjs/common';
 import { BookingRepository } from './booking.repository';
 import { AvailabilityService } from '../availability-manager/availability.service';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import {SQSService} from '../infraestructure/sqs.service';
 import { randomUUID, UUID } from 'crypto';
+import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class BookingService {
+export class BookingService implements OnModuleInit{
 
     private readonly logger = new Logger(BookingService.name);
 
@@ -14,7 +16,9 @@ export class BookingService {
         private readonly bookingRepository: BookingRepository,
         private readonly availabilityService: AvailabilityService,
         private readonly kafkaService: KafkaService,
-        private readonly sqsService: SQSService
+        private readonly sqsService: SQSService,
+        @Inject('admin-client') private readonly kafkaClient: ClientKafka,
+        @Inject('auth-client') private readonly authClient: ClientKafka,
     ) {
         this.kafkaService.init();
     }
@@ -33,32 +37,100 @@ export class BookingService {
         }
     }
 
+    
+    async onModuleInit() {
+        try {
+            console.log('[JwtAuthGuard] Subscribing to Kafka topics...');
+            await this.authClient.subscribeToResponseOf('validate_user');
+            await this.authClient.subscribeToResponseOf('validate_user.reply'); // Add explicit subscription for reply topic
+            console.log('[JwtAuthGuard] Subscribed to Kafka topics successfully');
+
+            console.log('[JwtAuthGuard] Connecting to Kafka...');
+            await this.authClient.connect(); // Ensure the Kafka cient is connected
+            //this.authClient.subscribeToResponseOf('validate_user');
+            await this.kafkaClient.subscribeToResponseOf('get-booking-data');
+            await this.kafkaClient.subscribeToResponseOf('get-booking-data.reply');
+            await this.kafkaClient.connect();
+        } catch (error) {
+            console.error('Failed to connect to Kafka', error);
+        }
+    }
+
+
     async getAllBookingsByUserId(user_id: string) {
         try {
             const filterQuery = { user_id };
-            const result = await this.bookingRepository.find(filterQuery);
+            const bookings = await this.bookingRepository.find(filterQuery);
     
-            if (result.length === 0) {
+            if (bookings.length === 0) {
                 this.logger.warn(`No bookings found for user with ID: ${user_id}`);
+                return [];  
             }
+            const salonServiceDataPromises = bookings.map(async (booking) => {
+                const salon_id = booking.salon_id; 
+                const service_id = booking.service_id; 
     
+                try {
+                    const salonServiceData = await firstValueFrom(
+                        this.kafkaClient.send('get-booking-data', [{ salon_id, service_id }]) 
+                    );
+    
+                    return {
+                        booking,            
+                        salonServiceData, 
+                    };
+                } catch (kafkaError) {
+                    this.logger.debug('Raw Error Object:', kafkaError);
+                    this.logger.error('Error during Kafka call for salon and service data', {
+                        message: kafkaError.message || kafkaError.toString(),
+                        stack: kafkaError.stack || null,
+                        details: JSON.stringify(kafkaError, null, 2),
+                    });
+                    throw new Error('Error fetching salon and service data from Kafka');
+                }
+            });
+            const result = await Promise.all(salonServiceDataPromises);
             return result;
         } catch (error) {
             this.logger.error(`Error fetching bookings for user ID: ${user_id}`, error.stack);
             throw new Error(`Unable to retrieve bookings for user ID: ${user_id}`);
         }
-    }
-    
+    }    
+
     async getBookingByBookingUUID(bookingUUID: string) {
         try {
+          
             const filterQuery = { bookingUUID };
             const result = await this.bookingRepository.findOne(filterQuery);
     
             if (!result) {
                 this.logger.warn(`No booking found for bookingUUID: ${bookingUUID}`);
+                throw new NotFoundException(`No booking found for bookingUUID: ${bookingUUID}`);
             }
     
-            return result;
+            const salon_id = result.salon_id; 
+            const service_id = result.service_id;  
+    
+            let salonServiceData: any;
+            try {
+                salonServiceData = await firstValueFrom(
+                    this.kafkaClient.send('get-booking-data', [{ salon_id, service_id }]) 
+                );
+            } catch (kafkaError) {
+                this.logger.debug('Raw Error Object:', kafkaError);
+                this.logger.error('Error during Kafka call for salon and service data', {
+                    message: kafkaError.message || kafkaError.toString(),
+                    stack: kafkaError.stack || null,
+                    details: JSON.stringify(kafkaError, null, 2),
+                });
+                throw new Error('Error fetching salon and service data from Kafka');
+            }
+
+            return {
+                booking: result,     
+                salonServiceData,    
+            };
+    
         } catch (error) {
             this.logger.error(`Error fetching booking for bookingUUID: ${bookingUUID}`, error.stack);
             throw new Error(`Unable to retrieve booking for bookingUUID: ${bookingUUID}`);
