@@ -63,7 +63,7 @@ export class ServiceController {
     // return await this.serviceManagerService.getAllServices();
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Post('get-services-by-salon')
   async getServicesBySalonId(@Body() body: GetServicesBySalonDto): Promise<Service[]> {
     const { salon_id } = body;
@@ -120,6 +120,15 @@ export class ServiceController {
     }
   }
 
-  
+  @MessagePattern('get-offers-data')
+  async getDataForOffers(serviceIds: number[]) {
+      return await this.serviceManagerService.getServicesIdData(serviceIds);
+  }
 
+
+  @MessagePattern('get-booking-data')
+  async getDataForBooking(data: Array<{ salon_id: number, service_id: number }>) {
+      return await this.serviceManagerService.getalonAndServiceDataById(data);
+  }
+  
 }
