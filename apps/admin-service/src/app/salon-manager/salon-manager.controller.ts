@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Param, Logger, Patch, BadRequestException } from '@nestjs/common';
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
@@ -48,20 +48,23 @@ export class SalonManagerController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('get-salon-by-salonId')
-  async getSalonsBySalonId(@Body('salonId') salonid: number ): Promise<Salon> {
-    try {
-      const response = await this.salonManagerService.getSalonBySalonId(salonid);
-      if (!response) {
-        this.logger.log(`No salons found for admin ID`);
+  //@UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
+  @Get('get-salon-by-salonId/:salonId')
+    async getSalonsBySalonId(@Param('salonId') salonId: number): Promise<Salon> {
+      Logger.log(salonId);
+      try {
+        const response = await this.salonManagerService.getSalonBySalonId(salonId);
+        if (!response) {
+          this.logger.log(`No salons found for salon ID: ${salonId}`);
+        }
+        return response;
+      } catch (error) {
+        this.logger.error('Error fetching salons', error);
+        throw new InternalServerErrorException('Failed to fetch salons');
       }
-      return response;
-    } catch (error) {
-      this.logger.error('Error fetching salons', error);
-      throw new InternalServerErrorException('Failed to fetch salons');
     }
-  }
+
 
   @Cron('0 2 * * 0')  
   async fillSchedules() {
