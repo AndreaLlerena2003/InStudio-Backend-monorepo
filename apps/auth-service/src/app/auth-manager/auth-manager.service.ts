@@ -100,6 +100,8 @@ export class AuthManagerService {
         response.cookie('Authentication', token, {
             httpOnly: true,
             expires,
+            sameSite: 'none',
+            maxAge:  3600000,  
         });
     }
 

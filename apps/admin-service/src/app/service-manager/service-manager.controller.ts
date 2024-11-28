@@ -120,6 +120,15 @@ export class ServiceController {
     }
   }
 
-  
+  @MessagePattern('get-offers-data')
+  async getDataForOffers(serviceIds: number[]) {
+      return await this.serviceManagerService.getServicesIdData(serviceIds);
+  }
 
+
+  @MessagePattern('get-booking-data')
+  async getDataForBooking(data: Array<{ salon_id: number, service_id: number }>) {
+      return await this.serviceManagerService.getalonAndServiceDataById(data);
+  }
+  
 }
