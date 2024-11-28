@@ -2,78 +2,78 @@ import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional } from 'class-valid
 
 export class ResultDto {
   @IsString()
-  typeBehavior: 'Reminder' | 'Offer';
+  TypeBehavior: 'Reminder' | 'Offer';
 
   @IsString()
   @IsNotEmpty()
-  salonName: string;
+  SalonName: string;
 
   @IsString()
   @IsNotEmpty()
-  username: string;
+  UserName: string;
 
   @IsString()
   @IsOptional()
-  date?: string;
+  Date?: string;  // Cambiado de date a Date
 
   @IsString()
   @IsOptional()
-  time?: string;
+  Time?: string;  // Cambiado de time a Time
 
   @IsString()
   @IsOptional()
-  service?: string;
+  Service?: string;  // Cambiado de service a Service
 
   @IsString()
   @IsOptional()
-  description?: string;
+  Description?: string;  // Cambiado de description a Description
 }
 
 export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  UserId: string;
 
   @IsString()
   @IsNotEmpty()
   Email: string; // Usar solo Email
 
   @IsEnum(['Subscription', 'Reminder', 'Offer'])
-  typeBehavior: 'Subscription' | 'Reminder' | 'Offer';
+  TypeBehavior: 'Subscription' | 'Reminder' | 'Offer';
 
   @IsString()
   @IsNotEmpty()
-  beautySalonId: string;
+  BeautySalonID: string; // Usar  en lugar de BeautySalonID
 
   @IsBoolean()
-  active = true;
+  Active = true;  // Cambiado de 'active' a 'Active'
 
   @IsEnum(['Pending', 'Sent', 'Error'])
-  status: 'Pending' | 'Sent' | 'Error' = 'Pending';
+  Status: 'Pending' | 'Sent' | 'Error' = 'Pending';  // Cambiado de 'status' a 'Status'
 
   @IsString()
   @IsOptional()
-  date?: string;
+  Date?: string;  // Cambiado de 'date' a 'Date'
 
   @IsString()
   @IsOptional()
-  time?: string;
+  Time?: string;  // Cambiado de 'time' a 'Time'
 
   @IsString()
   @IsOptional()
-  service?: string;
+  Service?: string;  // Cambiado de 'service' a 'Service'
 
   @IsString()
   @IsOptional()
-  reminderId?: string;
+  ReminderID?: string;  // Cambiado de 'reminderId' a 'ReminderID'
 
   @IsString()
   @IsOptional()
-  offerId?: string;
+  OfferID?: string;  // Cambiado de 'OfferID' a 'OfferID'
 
   @IsString()
   @IsOptional()
-  description?: string;
+  Description?: string;  // Cambiado de 'description' a 'Description'
 
   @IsString()
   UserID_TypeBehavior_BeautySalonID: string;
@@ -82,8 +82,10 @@ export class CreateNotificationDto {
   Timestamp: string;
 
   @IsString()
-  username: string; // Asegurarse de que coincida con el modelo
+  @IsNotEmpty()
+  UserName: string; // Cambiar de UserName a UserName
 
   @IsString()
-  salonName: string; // Asegurarse de que coincida con el modelo
+  @IsNotEmpty()
+  SalonName: string; // Cambiar de SalonName a SalonName
 }

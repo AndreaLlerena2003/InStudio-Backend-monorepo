@@ -16,23 +16,23 @@ export class PriorityNotificationManager extends NotificationManager {
 
   constructor(
     notificationRepository: NotificationRepository,
-    @Inject('user-client') protected readonly kafkaClient: ClientKafka
+    //@Inject('user-client') protected readonly kafkaClient: ClientKafka
   ) {
-    super(notificationRepository, kafkaClient);
+    super(notificationRepository);
     this.priorityQueue = new DistributedPriorityQueue();
   }
 
   async addNotificationToQueue(
     notificationType: string, 
-    userId: string, 
+    UserId: string, 
     email: string, 
     data: CreateNotificationDto
   ): Promise<void> {
     const priorityLevel = this.getPriorityLevel(notificationType);
     const queueData: NotificationQueueData = {
       ...data,
-      typeBehavior: notificationType as 'Subscription' | 'Reminder' | 'Offer', // Asegurar que typeBehavior esté presente
-      userId,
+      TypeBehavior: notificationType as 'Subscription' | 'Reminder' | 'Offer', // Asegurar que TypeBehavior esté presente
+      UserId,
       Email: email, // Usar solo Email
     };
 
@@ -94,59 +94,64 @@ export class PriorityNotificationManager extends NotificationManager {
   }
 
   private async processNotification(queueData: NotificationQueueData): Promise<void> {
-    const { typeBehavior, userId, beautySalonId, Email, date, time, service, offerId, description } = queueData;
+    const { TypeBehavior, UserId, BeautySalonID, Email, Date, Time, Service, OfferID, Description } = queueData;
+    // Cambiados: date->Date, time->Time, service->Service, OfferID->OfferID, description->Description
 
     Logger.log(`\n📨 Procesando notificación:`);
-    Logger.log(`- Tipo: ${typeBehavior}`);
-    Logger.log(`- Usuario: ${userId}`);
+    Logger.log(`- Tipo: ${TypeBehavior}`);
+    Logger.log(`- Usuario: ${UserId}`);
     Logger.log(`- Email: ${Email}`);
-    Logger.log(`- BeautySalonId: ${beautySalonId}`); 
-    Logger.log(`- Fecha: ${date}`);
-    Logger.log(`- Hora: ${time}`);
-    switch (typeBehavior) {
+    Logger.log(`- BeautySalonId: ${BeautySalonID}`); 
+    Logger.log(`- Fecha: ${Date}`);
+    Logger.log(`- Hora: ${Time}`);
+    switch (TypeBehavior) {
       case 'Reminder':
         Logger.log("Enviando notificación de recordatorio...");
-        if (beautySalonId && date && time && service) {
+        if (BeautySalonID && Date && Time && Service) {
           await this.sendReminderNotification(
-            Email, // Usar solo Email
-            userId,
-            date,
-            time,
-            service
+            Email,
+            UserId,
+            Date,
+            Time,
+            Service
           );
-
+          Logger.log("Notificación de recordatorio enviada");
           const notificationDto = new CreateNotificationDto();
-          notificationDto.userId = userId;
-          notificationDto.Email = Email; // Usar solo Email
-          notificationDto.typeBehavior = 'Reminder';
-          notificationDto.beautySalonId = beautySalonId;
-          notificationDto.active = true;
-          notificationDto.status = 'Sent';
-          notificationDto.date = date;
-          notificationDto.time = time;
-          notificationDto.service = service;
+          notificationDto.UserId = UserId;
+          notificationDto.Email = Email;
+          notificationDto.TypeBehavior = 'Reminder';
+          notificationDto.BeautySalonID = BeautySalonID;
+          notificationDto.Active = true;
+          notificationDto.Status = 'Sent';
+          notificationDto.Date = Date;
+          notificationDto.Time = Time;
+          notificationDto.Service = Service;
+          notificationDto.UserName = 'Default User';
+          notificationDto.SalonName = 'Default Salon';
           await this.notificationRepository.create(notificationDto);
           Logger.log('✅ Notificación de recordatorio enviada');
         }
         break;
 
       case 'Offer':
-        if (beautySalonId && offerId && description) {
+        if (BeautySalonID && OfferID && Description) {
           await this.sendOfferNotification(
-            userId,
-            Email, // Usar solo Email
-            description
+            UserId,
+            Email,
+            Description
           );
 
           const notificationDto = new CreateNotificationDto();
-          notificationDto.userId = userId;
-          notificationDto.Email = Email; // Usar solo Email
-          notificationDto.typeBehavior = 'Offer';
-          notificationDto.beautySalonId = beautySalonId;
-          notificationDto.active = true;
-          notificationDto.status = 'Sent';
-          notificationDto.offerId = offerId;
-          notificationDto.description = description;
+          notificationDto.UserId = UserId;
+          notificationDto.Email = Email;
+          notificationDto.TypeBehavior = 'Offer';
+          notificationDto.BeautySalonID = BeautySalonID;
+          notificationDto.Active = true;
+          notificationDto.Status = 'Sent';
+          notificationDto.OfferID = OfferID;
+          notificationDto.Description = Description;
+          notificationDto.UserName = 'Default User';
+          notificationDto.SalonName = 'Default Salon';
           await this.notificationRepository.create(notificationDto);
           Logger.log('✅ Notificación de oferta enviada');
         }
@@ -157,7 +162,7 @@ export class PriorityNotificationManager extends NotificationManager {
         break;
 
       default:
-        Logger.log(`⚠️ Tipo de notificación desconocido: ${typeBehavior}`);
+        Logger.log(`⚠️ Tipo de notificación desconocido: ${TypeBehavior}`);
     }
   }
 }

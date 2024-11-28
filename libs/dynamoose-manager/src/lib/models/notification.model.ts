@@ -11,8 +11,8 @@ export class Notification extends Item {
   Active!: boolean;
   Status!: 'Pending' | 'Sent' | 'Error';
   UserId!: string; 
-  username!: string;       // Cambiado de Username a username
-  salonName!: string;     // Cambiado de Salonname a salonName
+  UserName!: string;      // Cambiar de UserName a UserName
+  SalonName!: string;     // Cambiar de SalonName a SalonName
   Date?: string;
   Time?: string;
   Service?: string;
@@ -73,15 +73,13 @@ export const NotificationSchema = new Schema(
       type: String,
       required: true
     },
-    SalonName: {
+    SalonName: {          // Asegurar que use SalonName
       type: String,
-      required: true,
-      alias: 'salonName' // Mapeo al nombre del modelo
+      required: true
     },
-    UserName: {
+    UserName: {           // Asegurar que use UserName
       type: String,
-      required: true,
-      alias: 'username'   // Mapeo al nombre del modelo
+      required: true
     },
     Active: {
       type: Boolean,

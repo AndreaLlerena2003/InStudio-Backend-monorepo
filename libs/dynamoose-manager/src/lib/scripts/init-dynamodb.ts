@@ -36,15 +36,15 @@ async function createOrUpdateNotificationTable() {
       { AttributeName: 'UserID_TypeBehavior_BeautySalonID', AttributeType: 'S' as ScalarAttributeType },
       { AttributeName: 'Timestamp', AttributeType: 'S' as ScalarAttributeType },
       { AttributeName: 'TypeBehavior', AttributeType: 'S' as ScalarAttributeType },
-      { AttributeName: 'BeautySalonID', AttributeType: 'S' as ScalarAttributeType },
+      { AttributeName: '', AttributeType: 'S' as ScalarAttributeType },
       { AttributeName: 'UserId', AttributeType: 'S' as ScalarAttributeType }
     ],
     GlobalSecondaryIndexes: [
       {
-        IndexName: 'TypeBehavior-BeautySalonID-index',
+        IndexName: 'TypeBehavior--index',
         KeySchema: [
           { AttributeName: 'TypeBehavior', KeyType: 'HASH' as KeyType },
-          { AttributeName: 'BeautySalonID', KeyType: 'RANGE' as KeyType }
+          { AttributeName: '', KeyType: 'RANGE' as KeyType }
         ],
         Projection: {
           ProjectionType: 'ALL' as ProjectionType

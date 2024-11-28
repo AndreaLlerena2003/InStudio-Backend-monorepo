@@ -11,7 +11,8 @@ import { PriorityNotificationManager } from '../../services/priority-notificatio
 import { DynamooseManagerModule } from '@backend-in-studio/dynamoose-manager';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ClientsModule } from '@nestjs/microservices';
+import { kafkaConfig, authClientConfig } from '../shared/kafka.config'; // Asegúrate de que la ruta sea correcta
 
 @Module({
   imports: [
@@ -20,49 +21,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     KafkaManagerModule,
     ScheduleModule.forRoot(),
     HttpModule,
-    ClientsModule.register([
-      {
-        name: 'auth-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'auth',
-            brokers: ['localhost:9092'], // Reemplaza con tus brokers Kafka
-          },
-          consumer: {
-            groupId: 'notification-service-consumer',
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
-      {
-        name: 'user-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'notification',
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: 'notification-service-consumer',
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
-      {
-        name: 'salon-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'salon',
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: 'notification-service-salon-consumer',
-          },
-        },
-      },
-    ])
+    ClientsModule.register([kafkaConfig, authClientConfig]), // Registra ambos clientes aquí
   ],
   controllers: [NotificationController],
   providers: [

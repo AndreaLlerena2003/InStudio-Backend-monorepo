@@ -14,79 +14,80 @@ export class NotificationRepository {
   ) {}
 
   async create(notificationDto: CreateNotificationDto): Promise<Notification> {
+    Logger.log("Creando notificación");
     const timestamp = new Date().toISOString();
-    const userKey = `${notificationDto.userId}#${notificationDto.typeBehavior}#${notificationDto.beautySalonId}`;
-
+    const userKey = `${notificationDto.UserId}#${notificationDto.TypeBehavior}#${notificationDto.BeautySalonID}`;
+    Logger.log("NOTIFICATION: ", JSON.stringify(notificationDto));                                                                                                                 6
     const notificationData: CreateNotificationDto = {
       UserID_TypeBehavior_BeautySalonID: userKey,
-      userId: notificationDto.userId,
+      UserId: notificationDto.UserId,  // Cambiado de 'UserId' a 'UserId'
       Timestamp: timestamp,
       Email: notificationDto.Email, // Usar solo Email
-      typeBehavior: notificationDto.typeBehavior,
-      beautySalonId: notificationDto.beautySalonId,
-      active: notificationDto.active,
-      status: notificationDto.status,
-      date: notificationDto.date,
-      time: notificationDto.time,
-      service: notificationDto.service,
-      reminderId: notificationDto.reminderId,
-      offerId: notificationDto.offerId,
-      description: notificationDto.description,
-      username: notificationDto.username,
-      salonName: notificationDto.salonName
+      TypeBehavior: notificationDto.TypeBehavior,
+      BeautySalonID: notificationDto.BeautySalonID,
+      Active: notificationDto.Active,  // Cambiado de 'active' a 'Active'
+      Status: notificationDto.Status,  // Cambiado de 'status' a 'Status'
+      Date: notificationDto.Date,  // Cambiado de 'date' a 'Date'
+      Time: notificationDto.Time,  // Cambiado de 'time' a 'Time'
+      Service: notificationDto.Service,  // Cambiado de 'service' a 'Service'
+      ReminderID: notificationDto.ReminderID,  // Cambiado de 'reminderId' a 'ReminderID'
+      OfferID: notificationDto.OfferID,  // Cambiado de 'OfferID' a 'OfferID'
+      Description: notificationDto.Description,  // Cambiado de 'description' a 'Description'
+      UserName: notificationDto.UserName,
+      SalonName: notificationDto.SalonName
     };
-
+    Logger.log("Datos de notificación", JSON.stringify(notificationData));
     return this.notificationModel.create(notificationData);
   }
 
-  async findByUserAndType(userId: string, type: string): Promise<Notification[]> {
+  async findByUserAndType(UserId: string, type: string): Promise<Notification[]> {
     const notifications = await this.notificationModel
       .query('UserID_TypeBehavior_BeautySalonID')
-      .beginsWith(`${userId}#${type}`)
+      .beginsWith(`${UserId}#${type}`)
       .exec();
     Logger.log(`Notificaciones encontradas: ${notifications.length}`);
-    // Añadir username y salonName usando getUserNameAndSalonname
+    // Añadir UserName y SalonName usando getUserNameAndSalonname
     const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
-      const [_, typeBehavior, beautySalonId] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
-      const userData = { username: "notification.username", salonName: "notification.salonName" };
-      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      const [_, typeBehavior, BeautySalonID] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
+      const userData = { UserName: "notification.UserName", SalonName: "notification.SalonName" };
+      /*await this.getUserNameAndSalonname(UserId, typeBehavior, BeautySalonID);*/
       return {
         ...notification,
-        username: userData?.username || notification.username,
-        salonName: userData?.salonName || notification.salonName,
+        UserName: userData?.UserName || notification.UserName,
+        SalonName: userData?.SalonName || notification.SalonName,
       };
     }));
 
     return enrichedNotifications as Notification[];
   }
 
-  async updateStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pending' | 'Sent' | 'Error') {
-    const user_key = `${user_id}#${type_to_behavior}#${beauty_salon_id}`;
+  async updateStatus(user_id: string, type_to_behavior: string, BeautySalonID: string, Status: 'Pending' | 'Sent' | 'Error') {
+    const user_key = `${user_id}#${type_to_behavior}#${BeautySalonID}`;
     const [notification] = await this.notificationModel
       .query('UserID_TypeBehavior_BeautySalonID')
       .eq(user_key)
       .sort('descending')
       .limit(1)
       .exec();
-
+    Logger.log(`Actualizando notificación con ID: ${user_key}`);
     if (notification) {
       await this.notificationModel.update({
         UserID_TypeBehavior_BeautySalonID: user_key,
         Timestamp: notification.Timestamp
       }, {
-        Status: status
+        Status: Status
       });
     } else {
       this.logger.warn(`No se encontró la notificación para actualizar`);
     }
   }
 
-  async findRecentByTypeAndSalon(type_behavior: string, beauty_salon_id: string) {
+  async findRecentByTypeAndSalon(type_behavior: string, BeautySalonID: string) {
     return this.notificationModel
       .query('TypeBehavior')
       .eq(type_behavior)
       .where('BeautySalonID')
-      .eq(beauty_salon_id)
+      .eq(BeautySalonID)
       .filter('Status')
       .eq('Pending')
       .and()
@@ -96,23 +97,23 @@ export class NotificationRepository {
       .exec();
   }
 
-  async getFollowers(beauty_salon_id: string) {
+  async getFollowers(BeautySalonID: string) {
     return this.notificationModel
       .query('TypeBehavior')
       .eq('Subscription')
       .where('BeautySalonID')
-      .eq(beauty_salon_id)
+      .eq(BeautySalonID)
       .filter('Active')
       .eq(true)
       .exec();
   }
 
-  async getRecentNotifications(type_behavior: string, beauty_salon_id: string) {
+  async getRecentNotifications(type_behavior: string, BeautySalonID: string) {
     const notifications = await this.notificationModel
       .query('TypeBehavior')
       .eq(type_behavior)
       .where('BeautySalonID')
-      .eq(beauty_salon_id)
+      .eq(BeautySalonID)
       .filter('Status')
       .eq('Pending')
       .and()
@@ -123,21 +124,21 @@ export class NotificationRepository {
       .limit(10)
       .exec();
 
-    // Añadir username y salonName usando getUserNameAndSalonname
+    // Añadir UserName y SalonName usando getUserNameAndSalonname
     const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
       const userKeyParts = notification.UserID_TypeBehavior_BeautySalonID.split('#');
-      const userId = userKeyParts[0];
+      /*const UserId = userKeyParts[0];
       const typeBehavior = userKeyParts[1];
-      const beautySalonId = userKeyParts[2];
+      const BeautySalonID = userKeyParts[2];*/
       const userData = {
-        username: "notification.username",
-        salonName: "notification.salon"
+        UserName: "notification.UserName",
+        SalonName: "notification.salon"
       }
-      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      /*await this.getUserNameAndSalonname(UserId, typeBehavior, BeautySalonID);*/
       return {
         ...notification,
-        username: userData?.username || notification.username,
-        salonName: userData?.salonName || notification.salonName,
+        UserName: userData?.UserName || notification.UserName,
+        SalonName: userData?.SalonName || notification.SalonName,
       };
     }));
 
@@ -160,46 +161,46 @@ export class NotificationRepository {
     return null;
   }
 
-  async getRecentNotificationsForUser(userId: string): Promise<CreateNotificationDto[]> {
+  async getRecentNotificationsForUser(UserId: string): Promise<CreateNotificationDto[]> {
     const notifications = await this.notificationModel
       .query('UserId')
-      .eq(userId)
+      .eq(UserId)
       .limit(5)
       .sort('descending')
       .using('UserId-index')
       .exec();
 
-    // Añadir username y salonName usando getUserNameAndSalonname
+    // Añadir UserName y SalonName usando getUserNameAndSalonname
     const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
-      const [_, typeBehavior, beautySalonId] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
-      const userData = {username: "notification.username", salonName: "notification.salonName"};
-      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      const [_, typeBehavior, BeautySalonID] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
+      const userData = {UserName: "notification.UserName", SalonName: "notification.SalonName"};
+      /*await this.getUserNameAndSalonname(UserId, typeBehavior, BeautySalonID);*/
       return {
         UserID_TypeBehavior_BeautySalonID: notification.UserID_TypeBehavior_BeautySalonID,
-        userId: notification.UserId,
+        UserId: notification.UserId,  // Cambiado de 'UserId' a 'UserId'
         Timestamp: notification.Timestamp,
         Email: notification.Email, // Usar solo Email
-        typeBehavior: notification.TypeBehavior,
-        beautySalonId: notification.BeautySalonID,
-        active: notification.Active,
-        status: notification.Status,
-        date: notification.Date,
-        time: notification.Time,
-        service: notification.Service,
-        reminderId: notification.ReminderID,
-        offerId: notification.OfferID,
-        description: notification.Description,
-        username: userData?.username || notification.username, // Actualizado
-        salonName: userData?.salonName || notification.salonName // Actualizado
+        TypeBehavior: notification.TypeBehavior,
+        BeautySalonID: notification.BeautySalonID,
+        Active: notification.Active,  // Cambiado de 'active' a 'Active'
+        Status: notification.Status,  // Cambiado de 'status' a 'Status'
+        Date: notification.Date,  // Cambiado de 'date' a 'Date'
+        Time: notification.Time,  // Cambiado de 'time' a 'Time'
+        Service: notification.Service,  // Cambiado de 'service' a 'Service'
+        ReminderID: notification.ReminderID,  // Cambiado de 'reminderId' a 'ReminderID'
+        OfferID: notification.OfferID,  // Cambiado de 'OfferID' a 'OfferID'
+        Description: notification.Description,  // Cambiado de 'description' a 'Description'
+        UserName: userData?.UserName || notification.UserName, // Actualizado
+        SalonName: userData?.SalonName || notification.SalonName // Actualizado
       };
     }));
 
     return enrichedNotifications;
   }
 
-  /*async getUserNameAndSalonname(userId: string, typeBehavior: string, beautySalonId: string): Promise<{ username: string; salonName: string } | null> {
-    Logger.log(`Buscando usuario con ID: ${userId}, tipo: ${typeBehavior}, salón: ${beautySalonId}`);
-    const user_key = `${userId}#${typeBehavior}#${beautySalonId}`;
+  /*async getUserNameAndSalonname(UserId: string, typeBehavior: string, BeautySalonID: string): Promise<{ UserName: string; SalonName: string } | null> {
+    Logger.log(`Buscando usuario con ID: ${UserId}, tipo: ${typeBehavior}, salón: ${BeautySalonID}`);
+    const user_key = `${UserId}#${typeBehavior}#${BeautySalonID}`;
     const [notification] = await this.notificationModel
       .query('UserID_TypeBehavior_BeautySalonID')
       .eq(user_key)
@@ -208,12 +209,12 @@ export class NotificationRepository {
 
     if (notification) {
       return {
-        username: notification.username,
-        salonName: notification.salonName,
+        UserName: notification.UserName,
+        SalonName: notification.SalonName,
       };
     }
 
-    this.logger.warn(`No se encontró usuario con el ID: ${userId}, tipo: ${typeBehavior}, salón: ${beautySalonId}`);
+    this.logger.warn(`No se encontró usuario con el ID: ${UserId}, tipo: ${typeBehavior}, salón: ${BeautySalonID}`);
     return null;
   }
   */
