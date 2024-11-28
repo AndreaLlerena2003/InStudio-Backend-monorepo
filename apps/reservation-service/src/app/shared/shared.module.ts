@@ -3,49 +3,43 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
 import { S3ManagerModule } from '@backend-in-studio/s3-manager';
 import { AuthLibModule } from '@backend-in-studio/auth-lib';
-import { SequelizeModule } from '@nestjs/sequelize';
-import {
-  Service,
-  Salon,
-  Subcategory,
-  Admin,
-  Category,
-} from '@backend-in-studio/db-manager-admin';
+import { MongooseManagerModule } from '@backend-in-studio/mongoose-manager';
+import { MongooseModule } from '@nestjs/mongoose';
 import { KafkaManagerService } from './kafka.init.service';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Booking, BookingSchema } from '../schemas/booking.schema';
+import { Availability, AvailabilitySchema } from '../schemas/availability.schema';
+import * as Joi from 'joi';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
-    SequelizeModule.forFeature([Service, Salon, Subcategory, Admin, Category]),
+    ConfigModule.forRoot({
+        isGlobal: true,
+        validationSchema: Joi.object({
+          MONGODB_URI: Joi.string().required(),
+          PORT: Joi.number().required(),
+        }),
+        envFilePath: '.env',
+      }),
     KafkaManagerModule,
     S3ManagerModule,
     AuthLibModule,
+    MongooseManagerModule,
+    MongooseModule.forFeature([
+        { name: Booking.name, schema: BookingSchema, collection: 'booking_collection' },
+        { name: Availability.name, schema: AvailabilitySchema, collection: 'availability_collection' },
+    ]),
     ClientsModule.register([
       {
         name: 'auth-client',
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'client-admin-service',
+            clientId: 'client-reservation-service',
             brokers: ['localhost:9092'],
           },
           consumer: {
             groupId: 'backend-InStudio-auth-service',
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
-      {
-        name: 'ANALYTICS_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'client-admin-service',
-            brokers: ['localhost:9092'],
-          },
-          consumer: {
-            groupId: 'banking-InStudio-analytics-service-group',
             allowAutoTopicCreation: true,
           },
         },
@@ -58,8 +52,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     KafkaManagerModule,
     S3ManagerModule,
     AuthLibModule,
-    ClientsModule,
-    SequelizeModule,
+    ClientsModule, 
+    ConfigModule, 
+    MongooseModule
+
   ],
 })
 export class SharedModule {}

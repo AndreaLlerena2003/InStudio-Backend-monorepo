@@ -6,6 +6,14 @@ import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
+
+type Schedule = Record<string, string[]>;
+export interface WeeklyAvailabilityInput {
+  salon_id: number;
+  schedules: Schedule;
+}
+
+
 @Injectable()
 export class SalonManagerService {
   private readonly logger = new Logger();
@@ -33,6 +41,28 @@ export class SalonManagerService {
     }
   }  
 
+  async getAllSalonsIdAndSchedulesAndSendToReservation() {
+    try {
+        const salons = await this.salonService.findAll({
+            attributes: ['id', 'schedule'], 
+        });
+        const result = salons.map((salon) => ({
+            salonId: salon.id,  
+            schedule: salon.schedule, 
+        }));
+
+        for (let salon of result) {
+            let payload: WeeklyAvailabilityInput = {
+                salon_id: salon.salonId,
+                schedules: salon.schedule,
+            };
+            this.kafkaService.sendEvent(payload, 'availability.slots.create');
+        }
+    } catch (error) {
+        this.logger.error('Failed to fetch salons and schedules:', error);
+        throw new Error('Failed to fetch salons and schedules');
+    }
+  }
   
   async getSalonsByAdminId(adminId: string): Promise<Salon[]> {
     try {
@@ -69,7 +99,7 @@ export class SalonManagerService {
   }
   
 
-  async updateSalonProfilePhoto(id: string, file: Express.Multer.File) {
+  async updateSalonProfilePhoto(id: number, file: Express.Multer.File) {
     try {
         const salon = await this.salonService.findByPk(id);
         if (!salon) {
@@ -91,6 +121,63 @@ export class SalonManagerService {
     }
   }
 
+  async updateSalonBannerPhotos(id: string, files: Express.Multer.File[]) {
+    try {
+        const salon = await this.salonService.findByPk(id);
+        if (!salon) {
+            throw new NotFoundException(`Salon with ID ${id} not found`);
+        }
+        if (!Array.isArray(files) || files.length === 0) {
+            throw new BadRequestException('No files provided');
+        }
+        const bannerPhotos = salon.banner_photos_url || []; 
+        if (bannerPhotos.length + files.length > 5) {
+            throw new BadRequestException('Cannot upload more than 5 banner photos');
+        }
+        const uploadedPaths = [];
+        for (const file of files) {
+            const filePath = `admin/banner_photos_salons/${id}/${file.originalname}`;
+            const uploadedPath = await this.s3Service.uploadFile(file, filePath);
+            uploadedPaths.push(uploadedPath);
+            bannerPhotos.push(uploadedPath);
+        }
+        salon.banner_photos_url = bannerPhotos; 
+        await salon.save();
+        this.logger.log(`Salon with ID ${id} successfully updated banner photos`);
+        return { bannerPhotos: salon.banner_photos_url };
+    } catch (error) {
+        this.logger.error(`Error updating banner photos for salon with ID ${id}`, error);
+        throw new InternalServerErrorException('Error updating banner photos');
+    }
+}
+
+async deleteSalonBannerPhoto(id: string, photoUrl: string) {
+  try {
+      const salon = await this.salonService.findByPk(id);
+      if (!salon) {
+          throw new NotFoundException(`Salon with ID ${id} not found`);
+      }
+
+      const bannerPhotos = salon.banner_photos_url || [];
+      const photoIndex = bannerPhotos.indexOf(photoUrl);
+
+      if (photoIndex === -1) {
+          throw new NotFoundException(`Photo URL ${photoUrl} not found in banner photos`);
+      }
+
+      await this.s3Service.deleteFile(photoUrl); 
+
+      bannerPhotos.splice(photoIndex, 1);
+      salon.banner_photos_url = bannerPhotos;
+      await salon.save();
+
+      this.logger.log(`Salon with ID ${id} successfully deleted a banner photo`);
+      return { bannerPhotos: salon.banner_photos_url };
+  } catch (error) {
+      this.logger.error(`Error deleting banner photo for salon with ID ${id}`, error);
+      throw new InternalServerErrorException('Error deleting banner photo');
+  }
+}
 
   async addSchedule(salon_id: number, day: string, hours: string[]): Promise<void> {
     try {
@@ -134,7 +221,11 @@ export class SalonManagerService {
   
       this.logger.log(`Weekly schedule updated successfully for salon ID: ${salon_id}`);
       const finalSchedule = (await this.getSalonBySalonId(salon_id)).schedule;
-      this.kafkaService.sendEvent(finalSchedule,'create-slots');
+      const payload: WeeklyAvailabilityInput = {
+        salon_id: salon_id,
+        schedules: finalSchedule,
+      };      
+      this.kafkaService.sendEvent(payload,'availability.slots.create');
       return finalSchedule;
     } catch (error) {
       this.logger.error(`Error updating the weekly schedule for salon ID: ${weeklyScheduleDto.salon_id} - ${error.message}`);
@@ -177,6 +268,32 @@ export class SalonManagerService {
       throw new InternalServerErrorException('Failed to update salon');
     }
   }
-  
+
+  async replaceSalonBannerPhoto(id: string, oldPhotoUrl: string, newFile: Express.Multer.File) {
+    try {
+        const salon = await this.salonService.findByPk(id);
+        if (!salon) {
+            throw new NotFoundException(`Salon with ID ${id} not found`);
+        }
+        const bannerPhotos = salon.banner_photos_url || [];
+        const photoIndex = bannerPhotos.indexOf(oldPhotoUrl);
+        if (photoIndex === -1) {
+            throw new NotFoundException(`Photo URL ${oldPhotoUrl} not found in banner photos`);
+        }
+        await this.s3Service.deleteFile(oldPhotoUrl);
+        const filePath = `admin/banner_photos_salons/${id}/${newFile.originalname}`;
+        const newPhotoUrl = await this.s3Service.uploadFile(newFile, filePath);
+        bannerPhotos[photoIndex] = newPhotoUrl;
+        salon.banner_photos_url = bannerPhotos;
+        await salon.save();
+        this.logger.log(`Salon with ID ${id} successfully replaced a banner photo`);
+        return { bannerPhotos: salon.banner_photos_url };
+    } catch (error) {
+        this.logger.error(`Error replacing banner photo for salon with ID ${id}`, error.message);
+        throw new InternalServerErrorException('Error replacing banner photo');
+    }
+  }
+
+ 
   
 }

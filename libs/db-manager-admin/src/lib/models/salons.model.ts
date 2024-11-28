@@ -45,11 +45,11 @@ export class Salon extends Model<Salon> {
   declare profile_photo_url: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.ARRAY(DataType.STRING),
     allowNull: true,
   })
-  declare banner_photos_url: string;
-
+  declare banner_photos_url: string[];
+  
   @Column({
     type: DataType.JSON,
     allowNull: false,

@@ -26,5 +26,12 @@ export class CategoryManagerController {
   async getAllCategories() {
     return this.categoryManagerService.getAllCategories();
   }
+
+
+  @Get('get-all-categories-with-sub')
+  @HttpCode(HttpStatus.OK)
+  async getAllCategoriesWithSub() {
+    return this.categoryManagerService.getAllCategoriesWithSubcategories();
+  }
  
 }

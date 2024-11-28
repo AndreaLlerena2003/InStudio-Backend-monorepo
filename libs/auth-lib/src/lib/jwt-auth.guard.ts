@@ -24,7 +24,6 @@ import { firstValueFrom } from 'rxjs';
           this.kafkaClient.send('validate_user', { Authentication: authentication }),
         );
         this.addUser(user, context);
-        const externalId = user?.external_id; 
         return true;
       } catch {
         throw new UnauthorizedException(); 
