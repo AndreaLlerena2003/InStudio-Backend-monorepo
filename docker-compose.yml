@@ -1,0 +1,70 @@
+version: '3'
+services:
+  admin-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/admin-service
+      dockerfile: Dockerfile
+    ports:
+      - 3002:3002
+  notification-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/notification-service
+      dockerfile: Dockerfile
+    ports:
+      - 3003:3003
+  user-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/user-service
+      dockerfile: Dockerfile
+    ports:
+      - 3004:3004
+  payments-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/payments-service
+      dockerfile: Dockerfile
+    ports:
+      - 3005:3005
+  offers-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/offers-service
+      dockerfile: Dockerfile
+    ports:
+      - 3008:3008
+  auth-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/auth-service/src/app
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+  analytics-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/analytics-service
+      dockerfile: Dockerfile
+    ports:
+      - 3006:3006
+  reservation-service:
+    networks:
+      - kafka-kafdrop_default
+    build:
+      context: ./apps/reservations-service
+      dockerfile: Dockerfile
+    ports:
+      - 3007:3007
+
+networks:
+  kafka-kafdrop_default:
+    external: true
