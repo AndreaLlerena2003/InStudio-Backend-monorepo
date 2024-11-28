@@ -9,6 +9,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
   app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
