@@ -218,11 +218,20 @@ export class BookingService implements OnModuleInit{
 
     async generateBooking(user_id: string, service_id: number, salon_id: number, date: string, timeSlot: string) {
         const bookingUUID = randomUUID();
-        let  offerData: any;
+        let offerData: any;
+        let totalPrice: number | null = null;
+    
         try {
             offerData = await firstValueFrom(
                 this.offersClient.send('get-offer-data-by-service', service_id) 
             );
+    
+            // Si offerData no contiene datos, lo manejamos
+            if (offerData && offerData.length > 0) {
+                totalPrice = offerData[0].price;
+            } else {
+                this.logger.warn(`No offer data returned for service ID ${service_id}. Proceeding without pricing.`);
+            }
         } catch (kafkaError) {
             this.logger.debug('Raw Error Object:', kafkaError);
             this.logger.error('Error during Kafka call for salon and service data', {
@@ -230,10 +239,10 @@ export class BookingService implements OnModuleInit{
                 stack: kafkaError.stack || null,
                 details: JSON.stringify(kafkaError, null, 2),
             });
-            throw new Error('Error fetching salon and service data from Kafka');
+            // Continuar sin precio si hay un error con Kafka
+            this.logger.warn('Proceeding with booking despite Kafka error.');
         }
-        let totalPrice: number = offerData[0].price;
-        this.logger.log(offerData);
+    
         const messageBody = {
             bookingUUID,
             user_id,
@@ -241,17 +250,17 @@ export class BookingService implements OnModuleInit{
             salon_id,
             date,
             timeSlot,
-            totalPrice
+            ...(totalPrice !== null && { totalPrice }) // Agregar totalPrice solo si está disponible
         };
-
+    
         try {
             await this.sqsService.sendMessage(messageBody);
             this.logger.log(`Booking request queued for user ${user_id} at salon ${salon_id}`);
-            
+    
             return {
-                body: {bookingUUID: bookingUUID},
+                body: { bookingUUID },
                 message: 'Booking request received and is being processed.',
-                status: 'PENDING', 
+                status: 'PENDING',
             };
         } catch (error) {
             this.logger.error('Error queuing booking request:', error);
