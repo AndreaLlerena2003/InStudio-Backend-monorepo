@@ -31,10 +31,6 @@ export class CreateOfferDto {
   @IsNumber()
   percentageDiscount?: number;
 
-  @ValidateIf((o) => o.type === OfferType.COMBO)
-  @IsString()
-  comboDetails?: string;
-
   @ValidateIf((o) => o.type === OfferType.BONO)
   @IsNumber()
   bonoAmount?: number;

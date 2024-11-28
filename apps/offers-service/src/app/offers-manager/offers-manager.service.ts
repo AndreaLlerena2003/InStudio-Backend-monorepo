@@ -7,6 +7,24 @@ import { OfferType, Offers } from '../schemas/offer.schema';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
+
+export class OfferWithPrice {
+    constructor(
+        public offersUUID: string,
+        public name: string,
+        public description: string,
+        public type: OfferType,
+        public start_date: Date,
+        public final_date: Date,
+        public service_id: number[],
+        public salon_id: number,
+        public percentageDiscount?: number,
+        public bonoAmount?: number,
+        public price?: number 
+    ) {}
+}
+
+
 @Injectable()
 export class OffersService implements OnModuleInit {
 
@@ -37,13 +55,7 @@ export class OffersService implements OnModuleInit {
                     throw new Error('percentageDiscount is required for DISCOUNT offers');
                 }
                 break;
-    
-            case OfferType.COMBO:
-                if (!createOfferDto.comboDetails) {
-                    throw new Error('comboDetails is required for COMBO offers');
-                }
-                break;
-    
+        
             case OfferType.BONO:
                 if (!createOfferDto.bonoAmount) {
                     throw new Error('bonoAmount is required for BONO offers');
@@ -62,21 +74,71 @@ export class OffersService implements OnModuleInit {
         return savedOffer;
     }
 
-    
-    async getOffersByServiceId(serviceId: number): Promise<Offers[]> {
+    async getOffersByServiceId(serviceId: number): Promise<OfferWithPrice[]> {
         this.logger.log(`Fetching offers for service ID: ${serviceId}`);
-
-        const offers = await this.offersRepository.find({serviceId});
-
+        let offersData: any;
+        try {
+            offersData = await firstValueFrom(
+                this.kafkaClient.send('get-offers-data', [serviceId])
+            );
+        } catch (kafkaError) {
+            this.logger.debug('Raw Error Object:', kafkaError);
+            this.logger.error('Error during Kafka call for offers data', {
+                message: kafkaError.message || kafkaError.toString(),
+                stack: kafkaError.stack || null,
+                details: JSON.stringify(kafkaError, null, 2),
+            });
+            throw new Error('Error fetching offers data from Kafka');
+        }
+    
+        const offers = await this.offersRepository.find({ service_id: serviceId });
+    
         if (!offers || offers.length === 0) {
             this.logger.warn(`No offers found for service ID: ${serviceId}`);
             throw new NotFoundException(`No offers found for service ID: ${serviceId}`);
         }
-
+    
         this.logger.log(`Found ${offers.length} offers for service ID: ${serviceId}`);
-        return offers;
+        const offersWithPrice = offers.map(offer => {
+            const offerData = offer;
+            this.logger.log(offersData[serviceId]);
+            const offerDataPrice = offersData[serviceId]?.categories[0].services[0].price;
+            let price: number = offerDataPrice;
+    
+            if (offerDataPrice) {
+                switch (offerData.type) {
+                    case OfferType.DISCOUNT:
+                        price = offerDataPrice - (offerDataPrice * offerData.percentageDiscount / 100);
+                        break;
+                    case OfferType.BONO:
+                        price = offerDataPrice - offerData.bonoAmount;
+                        break;
+                    default:
+                        price = offerDataPrice;
+                        break;
+                }
+            }
+    
+            return new OfferWithPrice(
+                offerData.offersUUID,
+                offerData.name,
+                offerData.dscription,
+                offerData.type,
+                offerData.start_date,
+                offerData.final_date,
+                offerData.service_id,
+                offerData.salon_id,
+                offerData.percentageDiscount,
+                offerData.bonoAmount,
+                price
+            );
+          
+        });
+        console.log(offersWithPrice);
+        return offersWithPrice;
     }
-
+    
+    
     async offersData(salonId: number): Promise<any> {
         const { offers, offersData } = await this.getOffersBySalonId(salonId);
         const salonData = offersData[salonId];

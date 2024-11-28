@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 export enum OfferType {
   DISCOUNT = 'DISCOUNT',
-  COMBO = 'COMBO',
   BONO = 'BONO',
 }
 
@@ -37,9 +36,6 @@ export class Offers extends AbstractDocument {
 
   @Prop()
   percentageDiscount?: number;
-
-  @Prop()
-  comboDetails?: string;
 
   @Prop()
   bonoAmount?: number;

@@ -19,6 +19,7 @@ export class BookingService implements OnModuleInit{
         private readonly sqsService: SQSService,
         @Inject('admin-client') private readonly kafkaClient: ClientKafka,
         @Inject('auth-client') private readonly authClient: ClientKafka,
+        @Inject('offers-client') private readonly offersClient: ClientKafka,
     ) {
         this.kafkaService.init();
     }
@@ -51,6 +52,10 @@ export class BookingService implements OnModuleInit{
             await this.kafkaClient.subscribeToResponseOf('get-booking-data');
             await this.kafkaClient.subscribeToResponseOf('get-booking-data.reply');
             await this.kafkaClient.connect();
+
+            await this.offersClient.subscribeToResponseOf('get-offer-data-by-service');
+            await this.offersClient.subscribeToResponseOf('get-offer-data-by-service.reply');
+            await this.offersClient.connect();
         } catch (error) {
             console.error('Failed to connect to Kafka', error);
         }
@@ -196,6 +201,7 @@ export class BookingService implements OnModuleInit{
                         booking_date: bookingRequest.date,
                         time_slot: bookingRequest.timeSlot,
                         status: 'PENDING_TO_PAY',
+                        totalPrice: bookingRequest.totalPrice
                       });
             
                       this.logger.log(`Booking successfully created for user ${bookingRequest.user_id}`);
@@ -212,6 +218,22 @@ export class BookingService implements OnModuleInit{
 
     async generateBooking(user_id: string, service_id: number, salon_id: number, date: string, timeSlot: string) {
         const bookingUUID = randomUUID();
+        let  offerData: any;
+        try {
+            offerData = await firstValueFrom(
+                this.offersClient.send('get-offer-data-by-service', service_id) 
+            );
+        } catch (kafkaError) {
+            this.logger.debug('Raw Error Object:', kafkaError);
+            this.logger.error('Error during Kafka call for salon and service data', {
+                message: kafkaError.message || kafkaError.toString(),
+                stack: kafkaError.stack || null,
+                details: JSON.stringify(kafkaError, null, 2),
+            });
+            throw new Error('Error fetching salon and service data from Kafka');
+        }
+        let totalPrice: number = offerData[0].price;
+        this.logger.log(offerData);
         const messageBody = {
             bookingUUID,
             user_id,
@@ -219,8 +241,9 @@ export class BookingService implements OnModuleInit{
             salon_id,
             date,
             timeSlot,
+            totalPrice
         };
-    
+
         try {
             await this.sqsService.sendMessage(messageBody);
             this.logger.log(`Booking request queued for user ${user_id} at salon ${salon_id}`);

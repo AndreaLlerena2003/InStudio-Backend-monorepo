@@ -2,7 +2,8 @@ import { Controller, Post, Body, Get, Param, NotFoundException, Query } from '@n
 import { OffersService } from './offers-manager.service';
 import { CreateOfferDto } from '../dto/offers.dto';
 import { Offers } from '../schemas/offer.schema';
-
+import { OfferWithPrice } from './offers-manager.service';
+import { MessagePattern } from '@nestjs/microservices';
 @Controller('offers')
 export class OffersController {
 
@@ -13,10 +14,10 @@ export class OffersController {
         return this.offersService.createOffer(createOfferDto);
     }
 
-    @Get('service/:serviceId')
-    async getOffersByServiceId(@Param('serviceId') serviceId: number): Promise<Offers[]> {
+    @MessagePattern('get-offer-data-by-service')
+    async getOffersByServiceId(service_id: number): Promise<OfferWithPrice[]> {
         try {
-            return await this.offersService.getOffersByServiceId(serviceId);
+            return await this.offersService.getOffersByServiceId(service_id);
         } catch (error) {
             if (error instanceof NotFoundException) {
                 throw error;

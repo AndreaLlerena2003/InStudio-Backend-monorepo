@@ -58,6 +58,20 @@ import { ConfigModule } from '@nestjs/config';
           },
         },
       },
+      {
+        name: 'offers-client',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'client-reservation-service',
+            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], // Use env var
+          },
+          consumer: {
+            groupId: 'backend-InStudio-offers-service-andreasss',
+            allowAutoTopicCreation: true,
+          },
+        },
+      },
     ]),
     
   ],
