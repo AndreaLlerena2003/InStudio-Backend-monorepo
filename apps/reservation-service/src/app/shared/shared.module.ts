@@ -39,7 +39,7 @@ import { ConfigModule } from '@nestjs/config';
             brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], 
           },
           consumer: {
-            groupId: 'backend-InStudio-auth-service-1',
+            groupId: 'backend-InStudio-auth-service-andrea',
             allowAutoTopicCreation: true,
           },
         },
@@ -53,7 +53,7 @@ import { ConfigModule } from '@nestjs/config';
             brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], // Use env var
           },
           consumer: {
-            groupId: 'backend-InStudio-admin-service-1',
+            groupId: 'backend-InStudio-admin-service-andreasss',
             allowAutoTopicCreation: true,
           },
         },
