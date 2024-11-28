@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotificationRepository, INotification } from './notification.repository';
+import { NotificationRepository } from './notification.repository';
 import { PriorityNotificationManager } from '../../services/priority-notification-manager';
-import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
-import { ResultDto } from '../dto/notification.dto'; // Asegúrate de importar ResultDto
+import { ResultDto, CreateNotificationDto } from '../dto/notification.dto';
 
 @Injectable()
 export class NotificationService {
@@ -11,82 +10,101 @@ export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly priorityManager: PriorityNotificationManager,
-    private readonly kafkaService: KafkaService,
-  ) {
-    kafkaService.init();
-  }
+  ) {}
 
-  async handleSubscription(email: string, userId: string): Promise<ResultDto> {
+  async handleSubscription(email: string, userId: string): Promise<{ timestamp: string; status: string }> {
     this.logger.log(`Processing subscription for ${email}`);
+    const notificationDto = new CreateNotificationDto();
+    notificationDto.userId = userId;
+    notificationDto.Email = email; // Usar solo Email
+    notificationDto.typeBehavior = 'Subscription';
+    notificationDto.UserID_TypeBehavior_BeautySalonID = `${userId}_Subscription`;
+    notificationDto.Timestamp = new Date().toISOString();
+    
     await this.priorityManager.addNotificationToQueue(
       'Subscription',
       userId,
       email,
-      {}
+      notificationDto
     );
+    
     return {
-      date: new Date().toISOString(),
-      time: '', // Asigna según corresponda
-      service: 'Subscription',
-      description: 'Subscription processed successfully',
-      salonId: '', // Asigna según corresponda o utiliza otro método para obtenerlo
+      timestamp: new Date().toISOString(),
+      status: 'Subscription processed successfully'
     };
   }
 
   async handleReminder(data: {
-    email: string,
-    userId: string,
-    beautySalonId: string,
-    date: string,
-    timeStr: string,
-    service: string
+    email: string;
+    userId: string;
+    beautySalonId: string;
+    date: string;
+    timeStr: string;
+    service: string;
   }): Promise<ResultDto> {
     this.logger.log(`Processing reminder for ${data.email}`);
+    
+    const notificationDto = new CreateNotificationDto();
+    notificationDto.userId = data.userId;
+    notificationDto.Email = data.email; // Usar solo Email
+    notificationDto.typeBehavior = 'Reminder';
+    notificationDto.beautySalonId = data.beautySalonId;
+    notificationDto.date = data.date;
+    notificationDto.time = data.timeStr;
+    notificationDto.service = data.service;
+    notificationDto.UserID_TypeBehavior_BeautySalonID = 
+      `${data.userId}_Reminder_${data.beautySalonId}`;
+    notificationDto.Timestamp = new Date().toISOString();
+    Logger.log("Enviando a la cola de prioridad");
     await this.priorityManager.addNotificationToQueue(
       'Reminder',
       data.userId,
       data.email,
-      {
-        beauty_salon_id: data.beautySalonId,
-        date: data.date,
-        time_str: data.timeStr,
-        service: data.service
-      }
+      notificationDto
     );
-    return {
-      date: data.date,
-      time: data.timeStr,
-      service: data.service,
-      description: 'Reminder sent successfully',
-      salonId: data.beautySalonId,
-    };
+
+    const resultDto = new ResultDto();
+    resultDto.typeBehavior = 'Reminder';
+    resultDto.date = data.date;
+    resultDto.time = data.timeStr;
+    resultDto.service = data.service;
+    resultDto.description = 'Reminder sent successfully';
+    
+    return resultDto;
   }
 
   async handleOffer(data: {
-    email: string,
-    userId: string,
-    beautySalonId: string,
-    offerId: string,
-    description: string
+    email: string;
+    userId: string;
+    beautySalonId: string;
+    offerId: string;
+    description: string;
   }): Promise<ResultDto> {
     this.logger.log(`Processing offer for ${data.email}`);
+    
+    const notificationDto = new CreateNotificationDto();
+    notificationDto.userId = data.userId;
+    notificationDto.Email = data.email; // Usar solo Email
+    notificationDto.typeBehavior = 'Offer';
+    notificationDto.beautySalonId = data.beautySalonId;
+    notificationDto.offerId = data.offerId;
+    notificationDto.description = data.description;
+    notificationDto.UserID_TypeBehavior_BeautySalonID = 
+      `${data.userId}_Offer_${data.beautySalonId}`;
+    notificationDto.Timestamp = new Date().toISOString();
+    
     await this.priorityManager.addNotificationToQueue(
       'Offer',
       data.userId,
       data.email,
-      {
-        beauty_salon_id: data.beautySalonId,
-        offer_id: data.offerId,
-        description: data.description
-      }
+      notificationDto
     );
-    return {
-      date: new Date().toISOString(), // Asigna según corresponda
-      time: '', // Asigna según corresponda
-      service: 'Offer',
-      description: data.description,
-      salonId: data.beautySalonId,
-    };
+
+    const resultDto = new ResultDto();
+    resultDto.typeBehavior = 'Offer';
+    resultDto.description = data.description;
+    
+    return resultDto;
   }
 
   async processNotificationQueue() {
@@ -109,8 +127,19 @@ export class NotificationService {
     return { message: 'All queues purged successfully' };
   }
 
-  async getRecentNotificationsForUser(userId: string): Promise<INotification[]> {
-    return this.notificationRepository.getRecentNotificationsForUser(userId);
+  async getRecentNotificationsForUser(userId: string): Promise<ResultDto[]> {
+    const notifications = await this.notificationRepository.getRecentNotificationsForUser(userId);
+    
+    return notifications.map(notification => {
+      const resultDto = new ResultDto();
+      resultDto.typeBehavior = notification.typeBehavior as 'Reminder' | 'Offer';
+      resultDto.salonName = notification.salonName;
+      resultDto.username = notification.username;
+      resultDto.date = notification.date;
+      resultDto.time = notification.time;
+      resultDto.service = notification.service;
+      resultDto.description = notification.description;
+      return resultDto;
+    });
   }
-
 }

@@ -4,25 +4,6 @@ import { Model } from 'dynamoose/dist/Model';
 import { Notification } from '@backend-in-studio/dynamoose-manager';
 import { CreateNotificationDto } from '../dto/notification.dto';
 
-
-export type INotification = {
-  UserID_TypeBehavior_BeautySalonID: string;
-  Timestamp: string;
-  Email: string;
-  TypeBehavior: 'Subscription' | 'Reminder' | 'Offer';
-  BeautySalonID: string;
-  salonName?: string; // Agregar este campo
-  Active: boolean;
-  Status: 'Pendiente' | 'Enviado' | 'Error';
-  Date?: string;
-  Time?: string;
-  Service?: string;
-  ReminderID?: string;
-  OfferID?: string;
-  Description?: string;
-  UserId: string; // Añadir UserId
-};
-
 @Injectable()
 export class NotificationRepository {
   private readonly logger = new Logger(NotificationRepository.name);
@@ -32,38 +13,54 @@ export class NotificationRepository {
     private notificationModel: Model<Notification>
   ) {}
 
-  async create(notificationDto: CreateNotificationDto): Promise<INotification> {
+  async create(notificationDto: CreateNotificationDto): Promise<Notification> {
     const timestamp = new Date().toISOString();
     const userKey = `${notificationDto.userId}#${notificationDto.typeBehavior}#${notificationDto.beautySalonId}`;
 
-    const notificationData: INotification = {
+    const notificationData: CreateNotificationDto = {
       UserID_TypeBehavior_BeautySalonID: userKey,
-      UserId: notificationDto.userId, // Añadir UserId
+      userId: notificationDto.userId,
       Timestamp: timestamp,
-      Email: notificationDto.email,
-      TypeBehavior: notificationDto.typeBehavior,
-      BeautySalonID: notificationDto.beautySalonId,
-      Active: notificationDto.active,
-      Status: notificationDto.status,
-      Date: notificationDto.date,
-      Time: notificationDto.time,
-      Service: notificationDto.service,
-      ReminderID: notificationDto.reminderId,
-      OfferID: notificationDto.offerId,
-      Description: notificationDto.description
+      Email: notificationDto.Email, // Usar solo Email
+      typeBehavior: notificationDto.typeBehavior,
+      beautySalonId: notificationDto.beautySalonId,
+      active: notificationDto.active,
+      status: notificationDto.status,
+      date: notificationDto.date,
+      time: notificationDto.time,
+      service: notificationDto.service,
+      reminderId: notificationDto.reminderId,
+      offerId: notificationDto.offerId,
+      description: notificationDto.description,
+      username: notificationDto.username,
+      salonName: notificationDto.salonName
     };
 
     return this.notificationModel.create(notificationData);
   }
 
-  async findByUserAndType(userId: string, type: string) {
-    return this.notificationModel
+  async findByUserAndType(userId: string, type: string): Promise<Notification[]> {
+    const notifications = await this.notificationModel
       .query('UserID_TypeBehavior_BeautySalonID')
       .beginsWith(`${userId}#${type}`)
       .exec();
+    Logger.log(`Notificaciones encontradas: ${notifications.length}`);
+    // Añadir username y salonName usando getUserNameAndSalonname
+    const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
+      const [_, typeBehavior, beautySalonId] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
+      const userData = { username: "notification.username", salonName: "notification.salonName" };
+      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      return {
+        ...notification,
+        username: userData?.username || notification.username,
+        salonName: userData?.salonName || notification.salonName,
+      };
+    }));
+
+    return enrichedNotifications as Notification[];
   }
 
-  async updateStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pendiente' | 'Enviado' | 'Error') {
+  async updateStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pending' | 'Sent' | 'Error') {
     const user_key = `${user_id}#${type_to_behavior}#${beauty_salon_id}`;
     const [notification] = await this.notificationModel
       .query('UserID_TypeBehavior_BeautySalonID')
@@ -91,7 +88,7 @@ export class NotificationRepository {
       .where('BeautySalonID')
       .eq(beauty_salon_id)
       .filter('Status')
-      .eq('Pendiente')
+      .eq('Pending')
       .and()
       .filter('Active')
       .eq(true)
@@ -111,13 +108,13 @@ export class NotificationRepository {
   }
 
   async getRecentNotifications(type_behavior: string, beauty_salon_id: string) {
-    return this.notificationModel
+    const notifications = await this.notificationModel
       .query('TypeBehavior')
       .eq(type_behavior)
       .where('BeautySalonID')
       .eq(beauty_salon_id)
       .filter('Status')
-      .eq('Pendiente')
+      .eq('Pending')
       .and()
       .filter('Active')
       .eq(true)
@@ -125,6 +122,26 @@ export class NotificationRepository {
       .sort('descending')
       .limit(10)
       .exec();
+
+    // Añadir username y salonName usando getUserNameAndSalonname
+    const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
+      const userKeyParts = notification.UserID_TypeBehavior_BeautySalonID.split('#');
+      const userId = userKeyParts[0];
+      const typeBehavior = userKeyParts[1];
+      const beautySalonId = userKeyParts[2];
+      const userData = {
+        username: "notification.username",
+        salonName: "notification.salon"
+      }
+      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      return {
+        ...notification,
+        username: userData?.username || notification.username,
+        salonName: userData?.salonName || notification.salonName,
+      };
+    }));
+
+    return enrichedNotifications;
   }
 
   async getUserIdByEmail(email: string) {
@@ -143,14 +160,61 @@ export class NotificationRepository {
     return null;
   }
 
-  async getRecentNotificationsForUser(userId: string): Promise<INotification[]> {
-    return this.notificationModel
-      .query('UserId') // Usar el nuevo índice
+  async getRecentNotificationsForUser(userId: string): Promise<CreateNotificationDto[]> {
+    const notifications = await this.notificationModel
+      .query('UserId')
       .eq(userId)
       .limit(5)
       .sort('descending')
-      .using('UserId-index') // Especificar el índice
+      .using('UserId-index')
       .exec();
+
+    // Añadir username y salonName usando getUserNameAndSalonname
+    const enrichedNotifications = await Promise.all(notifications.map(async (notification) => {
+      const [_, typeBehavior, beautySalonId] = notification.UserID_TypeBehavior_BeautySalonID.split('#');
+      const userData = {username: "notification.username", salonName: "notification.salonName"};
+      /*await this.getUserNameAndSalonname(userId, typeBehavior, beautySalonId);*/
+      return {
+        UserID_TypeBehavior_BeautySalonID: notification.UserID_TypeBehavior_BeautySalonID,
+        userId: notification.UserId,
+        Timestamp: notification.Timestamp,
+        Email: notification.Email, // Usar solo Email
+        typeBehavior: notification.TypeBehavior,
+        beautySalonId: notification.BeautySalonID,
+        active: notification.Active,
+        status: notification.Status,
+        date: notification.Date,
+        time: notification.Time,
+        service: notification.Service,
+        reminderId: notification.ReminderID,
+        offerId: notification.OfferID,
+        description: notification.Description,
+        username: userData?.username || notification.username, // Actualizado
+        salonName: userData?.salonName || notification.salonName // Actualizado
+      };
+    }));
+
+    return enrichedNotifications;
   }
-  
+
+  /*async getUserNameAndSalonname(userId: string, typeBehavior: string, beautySalonId: string): Promise<{ username: string; salonName: string } | null> {
+    Logger.log(`Buscando usuario con ID: ${userId}, tipo: ${typeBehavior}, salón: ${beautySalonId}`);
+    const user_key = `${userId}#${typeBehavior}#${beautySalonId}`;
+    const [notification] = await this.notificationModel
+      .query('UserID_TypeBehavior_BeautySalonID')
+      .eq(user_key)
+      .limit(1)
+      .exec();
+
+    if (notification) {
+      return {
+        username: notification.username,
+        salonName: notification.salonName,
+      };
+    }
+
+    this.logger.warn(`No se encontró usuario con el ID: ${userId}, tipo: ${typeBehavior}, salón: ${beautySalonId}`);
+    return null;
+  }
+  */
 }

@@ -1,42 +1,44 @@
-import { Controller, Post, Body, Get, Logger, UseGuards, Request, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import { 
+  Controller, Post, Body, Get, Logger, UseGuards, Request, 
+  BadRequestException, HttpException, HttpStatus 
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib'; 
 import { ResultDto } from '../dto/notification.dto';
 import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
 
 @Controller('notifications')
 export class NotificationController {
   constructor(
     private readonly notificationService: NotificationService,
-    private readonly httpService: HttpService // Agregar HttpService
+    private readonly httpService: HttpService
   ) {}
 
   @EventPattern('reservation-created')
   async handleReservationCreated(@Payload() data: {
-    email: string,
-    userId: string,
-    beautySalonId: string,
-    date: string,
-    timeStr: string,
-    service: string
+    email: string;
+    userId: string;
+    beautySalonId: string;
+    date: string;
+    timeStr: string;
+    service: string;
   }): Promise<ResultDto> {
     try {
       if (!data.email || !data.userId || !data.beautySalonId || !data.date || !data.timeStr || !data.service) {
-        throw new BadRequestException('Missing required fields');
+        throw new BadRequestException('Faltan campos requeridos');
       }
       Logger.log('Reservation created', JSON.stringify(data));
-      const reminder = await this.notificationService.handleReminder(data);
-      return reminder; // Retorna ResultDto directamente
+      return await this.notificationService.handleReminder(data);
     } catch (error) {
-      Logger.error('Error in handleReservationCreated', error);
+      Logger.error('Error en handleReservationCreated', error);
       throw new HttpException(
-        { success: false, message: error.message },
+        error.message,
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
+
   @EventPattern('offer-created')
   async handleOfferCreated(@Payload() data: {
     email: string,
@@ -63,25 +65,25 @@ export class NotificationController {
 
   @EventPattern('userRegisteredNotification')
   async handleUserCreated(@Payload() data: {
-    email: string,
-    userId: string,
-    userName: string
-  }): Promise<ResultDto> {
+    email: string;
+    userId: string;
+    userName: string;
+  }): Promise<{ timestamp: string; status: string }> {
     try {
       Logger.log('User created, sending subscription email', JSON.stringify(data));
-      const subscription = await this.notificationService.handleSubscription(data.email, data.userId);
-      return subscription; // Returns ResultDto directly
+      return await this.notificationService.handleSubscription(data.email, data.userId);
     } catch (error) {
       Logger.error('Error in handleUserCreated', error);
       throw new HttpException(
-        { success: false, message: error.message },
+        error.message,
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('subscribe')
-  async subscribe(@Body() data: { email: string, userId: string }) {
+  async subscribe(@Body() data: { email: string; userId: string }): Promise<{ success: boolean; message: string; data: any }> {
     try {
       if (!data.email || !data.userId) {
         throw new BadRequestException('Email y userId son requeridos');
@@ -89,13 +91,13 @@ export class NotificationController {
       const subscription = await this.notificationService.handleSubscription(data.email, data.userId);
       return { success: true, message: 'Suscripción procesada exitosamente', data: subscription };
     } catch (error) {
-      Logger.error('Error en subscribe', error);
       throw new HttpException(
-        { success: false, message: error.message },
+        error.message,
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('send-reminder')
   async sendReminder(@Body() data: { 
@@ -108,7 +110,7 @@ export class NotificationController {
   }) {
     try {
       const reminder = await this.notificationService.handleReminder(data);
-      return { success: true, message: 'Recordatorio enviado exitosamente', data: reminder };
+      return { success: true, message: 'Recordatorio Sent exitosamente', data: reminder };
     } catch (error) {
       Logger.error('Error en sendReminder', error);
       throw new HttpException(
@@ -117,6 +119,7 @@ export class NotificationController {
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('send-offer')
   async sendOffer(@Body() data: {
@@ -137,6 +140,7 @@ export class NotificationController {
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('process-queue')
   async processQueue() {
@@ -151,12 +155,17 @@ export class NotificationController {
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('queue-status')
-  async getQueueStatus() {
+  async getQueueStatus(): Promise<{ success: boolean; message: string; data: { isEmpty: boolean; status: string } }> {
     try {
-      const status = this.notificationService.getQueueStatus();
-      return { success: true, message: 'Estado de la cola obtenido exitosamente', data: status };
+      const status = await this.notificationService.getQueueStatus();
+      return { 
+        success: true, 
+        message: 'Estado de la cola obtenido exitosamente', 
+        data: status 
+      };
     } catch (error) {
       Logger.error('Error en getQueueStatus', error);
       throw new HttpException(
@@ -165,6 +174,7 @@ export class NotificationController {
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('purge-queue')
   async purgeQueue() {
@@ -179,48 +189,25 @@ export class NotificationController {
       );
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('notificationsForUser')
-  async getInitialNotifications(@Request() req) {
+  async getInitialNotifications(@Request() req): Promise<{ success: boolean; message: string; data: ResultDto[] }> {
     try {
       const userId = req.user?.userId;
       if (!userId) {
         throw new BadRequestException('userId es requerido');
       }
-      Logger.log('Recibiendo peticiones', JSON.stringify(req.user));
-
+      
       const notifications = await this.notificationService.getRecentNotificationsForUser(userId);
-      Logger.log('Notificaciones obtenidas', JSON.stringify(notifications));
-
-      // Filtrar y mapear las notificaciones
-      const filteredNotifications = notifications
-        .filter(n => n.TypeBehavior === 'Offer' || n.TypeBehavior === 'Reminder')
-        .map(n => {
-          const resultDto = new ResultDto();
-          if (n.TypeBehavior === 'Reminder' || n.TypeBehavior === 'Offer') {
-            resultDto.typeBehavior = n.TypeBehavior;
-          }
-          resultDto.salonName = n.salonName; // Reemplazar beautySalonId con salonName
-
-          if (n.TypeBehavior === 'Reminder') {
-            resultDto.date = n.Date;
-            resultDto.time = n.Time;
-            resultDto.service = n.Service;
-          } else if (n.TypeBehavior === 'Offer') {
-            resultDto.description = n.Description;
-          }
-          return resultDto;
-        });
-
       return {
         success: true,
         message: 'Notificaciones obtenidas exitosamente',
-        data: filteredNotifications
+        data: notifications
       };
     } catch (error) {
-      Logger.error('Error en getInitialNotifications', error);
       throw new HttpException(
-        { success: false, message: error.message, ...(error.status ? { status: error.status } : {}) },
+        error.message,
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

@@ -1,14 +1,10 @@
-// Asegúrate de instalar 'aws-sdk' versión 3 y sus tipos:
-// npm install @aws-sdk/client-dynamodb
-// npm install --save-dev @types/aws-sdk
-
 import { DynamoDBClient, CreateTableCommand, UpdateTableCommand, DescribeTableCommand, ScalarAttributeType, KeyType, ProjectionType } from '@aws-sdk/client-dynamodb';
 import * as dotenv from 'dotenv';
 import { Logger } from '@nestjs/common'; 
 import { resolve } from 'path';
 
 // Especifica la ruta del archivo .env
-dotenv.config({ path: resolve( 'C:/Users/HP/Documents/Estudios/U/11/Arqui/InStudio-Backend-monorepo/apps/notification-service/.env') });
+dotenv.config({ path: resolve('C:/Users/HP/Documents/Estudios/U/11/Arqui/InStudio-Backend-monorepo/apps/notification-service/.env') });
 
 // Agregar registros para verificar que las variables de entorno se han cargado
 console.log('ACCESS_KEY_ID:', process.env.ACCESS_KEY_ID ? 'Cargado' : 'Faltante');
@@ -41,7 +37,7 @@ async function createOrUpdateNotificationTable() {
       { AttributeName: 'Timestamp', AttributeType: 'S' as ScalarAttributeType },
       { AttributeName: 'TypeBehavior', AttributeType: 'S' as ScalarAttributeType },
       { AttributeName: 'BeautySalonID', AttributeType: 'S' as ScalarAttributeType },
-      { AttributeName: 'UserId', AttributeType: 'S' as ScalarAttributeType } // Añadido: Definición de 'UserId'
+      { AttributeName: 'UserId', AttributeType: 'S' as ScalarAttributeType }
     ],
     GlobalSecondaryIndexes: [
       {

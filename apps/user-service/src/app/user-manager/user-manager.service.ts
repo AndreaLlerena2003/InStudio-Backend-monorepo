@@ -1,32 +1,20 @@
-<<<<<<< HEAD
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
-=======
 import { Injectable, Inject, NotFoundException, BadRequestException, InternalServerErrorException, Logger, OnModuleInit } from '@nestjs/common';
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '@backend-in-studio/db-manager-user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
-<<<<<<< HEAD
-@Injectable()
-export class UserManagerService {
-=======
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs'; 
 @Injectable()
 export class UserManagerService implements OnModuleInit {
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     private readonly logger = new Logger();
     constructor(
         @InjectModel(User)
         private readonly userService: typeof User,
         private readonly kafkaService: KafkaService,
         private readonly s3Service: S3Service,
-<<<<<<< HEAD
-=======
         @Inject('auth-client') private readonly kafkaClient: ClientKafka
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     ) {
         this.kafkaService.init();
     }
@@ -69,20 +57,6 @@ export class UserManagerService implements OnModuleInit {
                 this.logger.log(`User Found: ${JSON.stringify(user, null, 2)}`);
             } else {
                 this.logger.warn(`No user found for authentication: ${authentication}`);
-<<<<<<< HEAD
-            }
-            return user;
-        } catch (error) {
-            this.logger.error('Error fetching user data', {
-                message: error.message,
-                stack: error.stack,
-                details: error,
-            });
-    
-            throw new Error('Esto es una pruebita');
-        }
-    }
-=======
                 throw new Error('User not found');
             }
             let email: string;
@@ -119,8 +93,27 @@ export class UserManagerService implements OnModuleInit {
             );
         }
     }
+
+
+    async getUsernameForNotification(userId: string): Promise<string> {
+        try {
+            const user = await this.userService.findByPk(userId);
+            if (!user) {
+                this.logger.warn(`No username found for: ${userId}`);
+                throw new Error('User not found');
+            }
+            const { name } = user;
+            return name;
+        } catch (error) {
+            this.logger.error('Error fetching user name', {
+                message: error.message || error.toString(),
+                stack: error.stack || null,
+                details: error,
+            });
+            throw new Error(`Error processing user data for userId: ${userId}. Details: ${error.message || error}`);
+        }
+    }
     
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
 
     async updateUserName(authentication: string, name: string) {
         try {
@@ -164,8 +157,6 @@ export class UserManagerService implements OnModuleInit {
             throw new InternalServerErrorException('Error updating profile photo');
         }
     }
-<<<<<<< HEAD
-=======
 
     async updatePassword(newPassword: string, authentication: string) {
         try {
@@ -189,7 +180,6 @@ export class UserManagerService implements OnModuleInit {
             this.logger.error('Failed to connect to Kafka', error);
         }
       }
->>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
     
 
 }

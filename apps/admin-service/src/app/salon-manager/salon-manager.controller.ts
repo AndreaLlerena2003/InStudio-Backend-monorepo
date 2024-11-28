@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { SalonManagerService } from './salon-manager.service';
 import { CreateSalonDto } from '../dto/create-salon-dto';
 import { Salon } from '@backend-in-studio/db-manager-admin';
+import { MessagePattern } from '@nestjs/microservices';
 import { FileInterceptor , FilesInterceptor } from '@nestjs/platform-express';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
@@ -51,6 +52,21 @@ export class SalonManagerController {
   @UseGuards(JwtAuthGuard)
   @Get('get-salon-by-salonId')
   async getSalonsBySalonId(@Body('salonId') salonid: number ): Promise<Salon> {
+    try {
+      const response = await this.salonManagerService.getSalonBySalonId(salonid);
+      if (!response) {
+        this.logger.log(`No salons found for admin ID`);
+      }
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
+
+
+  @MessagePattern('get-salon-by-salonId-for-notification')
+  async getSalonsBySalonIdForNotification(@Body('salonId') salonid: number ): Promise<Salon> {
     try {
       const response = await this.salonManagerService.getSalonBySalonId(salonid);
       if (!response) {

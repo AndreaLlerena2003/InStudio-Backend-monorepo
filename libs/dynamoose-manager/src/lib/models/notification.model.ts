@@ -9,8 +9,10 @@ export class Notification extends Item {
   TypeBehavior!: 'Subscription' | 'Reminder' | 'Offer';
   BeautySalonID!: string;
   Active!: boolean;
-  Status!: 'Pendiente' | 'Enviado' | 'Error';
-  UserId!: string; // Nuevo atributo
+  Status!: 'Pending' | 'Sent' | 'Error';
+  UserId!: string; 
+  username!: string;       // Cambiado de Username a username
+  salonName!: string;     // Cambiado de Salonname a salonName
   Date?: string;
   Time?: string;
   Service?: string;
@@ -19,22 +21,22 @@ export class Notification extends Item {
   Description?: string;
 }
 
-export interface INotification {
+/*export interface INotification {
   UserID_TypeBehavior_BeautySalonID: string;
   Timestamp: string;
   Email: string;
   TypeBehavior: 'Subscription' | 'Reminder' | 'Offer';
   BeautySalonID: string;
   Active: boolean;
-  Status: 'Pendiente' | 'Enviado' | 'Error';
-  UserId: string; // Añadido: Definición de 'UserId'
+  Status: 'Pending' | 'Sent' | 'Error';
+  UserId: string; 
   Date?: string;
   Time?: string;
   Service?: string;
   ReminderID?: string;
   OfferID?: string;
   Description?: string;
-}
+}*/
 
 export const NotificationSchema = new Schema(
   {
@@ -71,6 +73,16 @@ export const NotificationSchema = new Schema(
       type: String,
       required: true
     },
+    SalonName: {
+      type: String,
+      required: true,
+      alias: 'salonName' // Mapeo al nombre del modelo
+    },
+    UserName: {
+      type: String,
+      required: true,
+      alias: 'username'   // Mapeo al nombre del modelo
+    },
     Active: {
       type: Boolean,
       required: true,
@@ -78,9 +90,9 @@ export const NotificationSchema = new Schema(
     },
     Status: {
       type: String,
-      enum: ['Pendiente', 'Enviado', 'Error'],
+      enum: ['Pending', 'Sent', 'Error'],
       required: true,
-      default: 'Pendiente'
+      default: 'Pending'
     },
     UserId: { // Definición del nuevo atributo
       type: String,
@@ -122,6 +134,6 @@ export const NotificationSchema = new Schema(
   },
   {
     saveUnknown: false, // No permitir atributos desconocidos
-    timestamps: false  // No usar timestamps automáticos
+    timestamps: false   // No usar timestamps automáticos
   }
 );

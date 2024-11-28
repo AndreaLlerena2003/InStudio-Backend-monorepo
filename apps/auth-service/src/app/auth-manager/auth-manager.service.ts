@@ -52,7 +52,15 @@ export class AuthManagerService {
             },
             'userRegistered',
         );
-
+        // Nuevo evento específico para notificaciones
+        this.kafkaService.sendEvent(
+            {
+                email: registerUserDto.email,
+                userId: external_id,
+                userName: registerUserDto.name
+            },
+            'userRegisteredNotification',
+        );
         return {
             message: 'User registered successfully',
             userId: newUser.external_id,

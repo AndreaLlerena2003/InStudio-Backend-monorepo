@@ -29,7 +29,7 @@ export class SQSService {
 
         try {
             const result = await this.client.send(command);
-            this.logger.log(`Mensaje enviado a SQS FIFO: ${result.MessageId}`);
+            this.logger.log(`Mensaje Sent a SQS FIFO: ${result.MessageId}`);
         } catch (error) {
             this.logger.error('Error enviando mensaje a SQS FIFO:', error);
             throw error;

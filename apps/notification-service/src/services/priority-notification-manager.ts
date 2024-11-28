@@ -1,24 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { NotificationManager } from './notification-manager';
 import { DistributedPriorityQueue } from './distributed-priority-queue';
 import { Cron } from '@nestjs/schedule';
 import { NotificationRepository } from '../app/notification/notification.repository';
 import { CreateNotificationDto } from '../app/dto/notification.dto';
-import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
+import { ClientKafka } from '@nestjs/microservices';
 
-export interface NotificationQueueData {
-  notificationType: string;
-  userId: string;
-  email: string;
-  data: {
-    beauty_salon_id?: string;
-    date?: string;
-    time_str?: string;
-    service?: string;
-    offer_id?: string;
-    description?: string;
-  };
+export interface NotificationQueueData extends CreateNotificationDto {
   [key: string]: unknown;
 }
 
@@ -28,9 +16,9 @@ export class PriorityNotificationManager extends NotificationManager {
 
   constructor(
     notificationRepository: NotificationRepository,
-    private readonly httpService: HttpService
+    @Inject('user-client') protected readonly kafkaClient: ClientKafka
   ) {
-    super(notificationRepository);
+    super(notificationRepository, kafkaClient);
     this.priorityQueue = new DistributedPriorityQueue();
   }
 
@@ -38,14 +26,14 @@ export class PriorityNotificationManager extends NotificationManager {
     notificationType: string, 
     userId: string, 
     email: string, 
-    data: Record<string, unknown>
+    data: CreateNotificationDto
   ): Promise<void> {
     const priorityLevel = this.getPriorityLevel(notificationType);
     const queueData: NotificationQueueData = {
-      notificationType,
+      ...data,
+      typeBehavior: notificationType as 'Subscription' | 'Reminder' | 'Offer', // Asegurar que typeBehavior esté presente
       userId,
-      email,
-      data: data as NotificationQueueData['data']
+      Email: email, // Usar solo Email
     };
 
     await this.priorityQueue.put(priorityLevel, queueData);
@@ -63,7 +51,7 @@ export class PriorityNotificationManager extends NotificationManager {
 
   async processQueue(): Promise<void> {
     if (await this.priorityQueue.empty()) {
-      Logger.log("🔄 No hay notificaciones pendientes en la cola");
+      Logger.log("🔄 No hay notificaciones Pendings en la cola");
       return;
     }
 
@@ -99,112 +87,77 @@ export class PriorityNotificationManager extends NotificationManager {
     Logger.log('✅ Todas las colas han sido purgadas');
   }
 
-  @Cron('*/5 * * * * *') // Se ejecuta cada 5 minuto
+  @Cron('*/5 * * * * *') // Se ejecuta cada 5 segundos
   async handleCronJob() {
     Logger.log('\n⏰ Ejecutando verificación programada de notificaciones...');
     await this.processQueue();
   }
 
   private async processNotification(queueData: NotificationQueueData): Promise<void> {
-    const { notificationType, userId, email, data } = queueData;
+    const { typeBehavior, userId, beautySalonId, Email, date, time, service, offerId, description } = queueData;
 
     Logger.log(`\n📨 Procesando notificación:`);
-    Logger.log(`- Tipo: ${notificationType}`);
+    Logger.log(`- Tipo: ${typeBehavior}`);
     Logger.log(`- Usuario: ${userId}`);
-    Logger.log(`- Email: ${email}`);
-
-    switch (notificationType) {
+    Logger.log(`- Email: ${Email}`);
+    Logger.log(`- BeautySalonId: ${beautySalonId}`); 
+    Logger.log(`- Fecha: ${date}`);
+    Logger.log(`- Hora: ${time}`);
+    switch (typeBehavior) {
       case 'Reminder':
-        if (data.beauty_salon_id && data.date && data.time_str && data.service) {
-          // Obtener nombre del salón
-          let salonName = 'Nombre no disponible';
-          try {
-            const response = await lastValueFrom(
-              this.httpService.get(`http://admin-service/salon-manager/get-salon-by-salonId`, {
-                params: { salonId: data.beauty_salon_id }
-              })
-            );
-            salonName = response.data.name;
-          } catch (error) {
-            Logger.error(`Error al obtener el nombre del salón con ID ${data.beauty_salon_id}`, error);
-          }
-
-          // Añadir salonName a data
-          data.salonName = salonName;
-
-          await this.send_reminder_notification(
-            email,
+        Logger.log("Enviando notificación de recordatorio...");
+        if (beautySalonId && date && time && service) {
+          await this.sendReminderNotification(
+            Email, // Usar solo Email
             userId,
-            data.beauty_salon_id,
-            data.date,
-            data.time_str,
-            data.service,
-            salonName // Pasar el nombre del salón si es necesario
+            date,
+            time,
+            service
           );
 
-          // Guardar la notificación con salonName
           const notificationDto = new CreateNotificationDto();
           notificationDto.userId = userId;
-          notificationDto.email = email;
+          notificationDto.Email = Email; // Usar solo Email
           notificationDto.typeBehavior = 'Reminder';
-          notificationDto.salonName = salonName; // Usar salonName
+          notificationDto.beautySalonId = beautySalonId;
           notificationDto.active = true;
-          notificationDto.status = 'Enviado';
-          notificationDto.date = data.date;
-          notificationDto.time = data.time_str;
-          notificationDto.service = data.service;
+          notificationDto.status = 'Sent';
+          notificationDto.date = date;
+          notificationDto.time = time;
+          notificationDto.service = service;
           await this.notificationRepository.create(notificationDto);
           Logger.log('✅ Notificación de recordatorio enviada');
         }
         break;
 
       case 'Offer':
-        if (data.beauty_salon_id && data.offer_id && data.description) {
-          // Obtener nombre del salón
-          let salonName = 'Nombre no disponible';
-          try {
-            const response = await lastValueFrom(
-              this.httpService.get(`http://admin-service/salon-manager/get-salon-by-salonId`, {
-                params: { salonId: data.beauty_salon_id }
-              })
-            );
-            salonName = response.data.name;
-          } catch (error) {
-            Logger.error(`Error al obtener el nombre del salón con ID ${data.beauty_salon_id}`, error);
-          }
-
-          // Añadir salonName a data
-          data.salonName = salonName;
-
-          await this.send_offer_notification(
+        if (beautySalonId && offerId && description) {
+          await this.sendOfferNotification(
             userId,
-            email,
-            data.beauty_salon_id,
-            data.offer_id,
-            data.description,
-            salonName
+            Email, // Usar solo Email
+            description
           );
 
           const notificationDto = new CreateNotificationDto();
           notificationDto.userId = userId;
-          notificationDto.email = email;
+          notificationDto.Email = Email; // Usar solo Email
           notificationDto.typeBehavior = 'Offer';
-          notificationDto.salonName = salonName; // Usar salonName
+          notificationDto.beautySalonId = beautySalonId;
           notificationDto.active = true;
-          notificationDto.status = 'Enviado';
-          notificationDto.offerId = data.offer_id;
-          notificationDto.description = data.description;
+          notificationDto.status = 'Sent';
+          notificationDto.offerId = offerId;
+          notificationDto.description = description;
           await this.notificationRepository.create(notificationDto);
           Logger.log('✅ Notificación de oferta enviada');
         }
         break;
 
       case 'Subscription':
-        await this.subscribe_to_sns_topic(email, { notificationType: 'Subscription' });
+        await this.subscribeToSnsTopic(Email, { notificationType: 'Subscription' }); // Usar solo Email
         break;
 
       default:
-        Logger.log(`⚠️ Tipo de notificación desconocido: ${notificationType}`);
+        Logger.log(`⚠️ Tipo de notificación desconocido: ${typeBehavior}`);
     }
   }
 }

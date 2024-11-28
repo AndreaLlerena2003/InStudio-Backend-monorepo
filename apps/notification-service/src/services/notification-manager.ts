@@ -1,21 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { SNSClient, SubscribeCommand, PublishCommand } from "@aws-sdk/client-sns";
 import * as dotenv from 'dotenv';
-import { NotificationRepository } from '../app/notification/notification.repository'; // Removido INotification
+import { NotificationRepository } from '../app/notification/notification.repository';
 import { CreateNotificationDto } from '../app/dto/notification.dto';
 import { SetSubscriptionAttributesCommand } from "@aws-sdk/client-sns";
-
+import { ClientKafka } from '@nestjs/microservices';
+import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
+import { firstValueFrom } from 'rxjs';
 
 dotenv.config();
 
 @Injectable()
-export class NotificationManager {
-  // Remover decorador WebSocketGateway y server property
+export class NotificationManager implements OnModuleInit {
   protected config: { maxAttempts: number };
   protected sns_client: SNSClient;
 
   constructor(
-    protected readonly notificationRepository: NotificationRepository
+    protected readonly notificationRepository: NotificationRepository,
+    @Inject('user-client') protected readonly kafkaClient: ClientKafka,
   ) {
     this.config = { maxAttempts: 3 };
     this.sns_client = new SNSClient({
@@ -27,15 +29,37 @@ export class NotificationManager {
       ...this.config
     });
   }
+  async onModuleInit() {
+    this.kafkaClient.subscribeToResponseOf('get-username-for-notification');
+    await this.kafkaClient.connect();
+  }
+  private async getSalonName(beautySalonId: string): Promise<string> {
+    /*// Llamar al microservicio de salón para obtener el nombre del salón
+    Logger.log("Entrou no getSalonName");
+    const salonName = await firstValueFrom(
+      this.kafkaClient.send('get-salon-name-for-notification', { beautySalonId }),
+    );*/
+    const salonName = "Salon Name";
+    return salonName;
+  }
+  private async getUsername(userId: string): Promise<string> {
+    // Llamar al microservicio de usuario para obtener el nombre de usuario
+    /*Logger.log("Entrou no getUsername");
+    const username = await firstValueFrom(
+      this.kafkaClient.send('get-username-for-notification', { userId }),
+    );*/
+    const username= "User Name";
+    return username;
+  }
 
-  validate_input(user_id, email, type_to_behavior) {
-    if (!user_id || typeof user_id !== 'string') {
+  validateInput(userId: string, email: string, typeToBehavior: string) {
+    if (!userId || typeof userId !== 'string') {
         throw new Error("Invalid UserID (username)");
     }
     if (!email || !email.includes("@")) {
         throw new Error("Invalid Email Address");
     }
-    if (!['Subscription', 'Reminder', 'Offer'].includes(type_to_behavior)) {
+    if (!['Subscription', 'Reminder', 'Offer'].includes(typeToBehavior)) {
         throw new Error("Invalid TypeBehavior");
     }
   }
@@ -44,9 +68,12 @@ export class NotificationManager {
     try {
       const notificationDto = new CreateNotificationDto();
       notificationDto.userId = user_id;
-      notificationDto.email = email;
+      notificationDto.Email = email; // Usar solo Email
       notificationDto.typeBehavior = type_to_behavior as 'Subscription' | 'Reminder' | 'Offer';
       notificationDto.beautySalonId = beauty_salon_id;
+      // Añadir los siguientes dos campos
+      notificationDto.username = await this.getUsername(user_id);
+      notificationDto.salonName = await this.getSalonName(beauty_salon_id);
       notificationDto.date = date;
       notificationDto.time = time;
       notificationDto.service = service;
@@ -67,7 +94,7 @@ export class NotificationManager {
       const command = new SetSubscriptionAttributesCommand({
         SubscriptionArn: subscriptionArn,
         AttributeName: attributeName,
-        AttributeValue: JSON.stringify(attributeValue), // Convierte el valor a JSON si es necesario (como en el caso de FilterPolicy)
+        AttributeValue: JSON.stringify(attributeValue), 
       });
   
       const response = await this.sns_client.send(command);
@@ -97,7 +124,7 @@ export class NotificationManager {
   }
   
 
-  async subscribe_to_sns_topic(email: string, filterPolicy: Record<string, string | number | boolean>) {
+  async subscribeToSnsTopic(email: string, filterPolicy: Record<string, string | number | boolean>) {
     try {
       const command = new SubscribeCommand({
         TopicArn: process.env.ARN,
@@ -119,14 +146,22 @@ export class NotificationManager {
   }
   
 
-  async send_offer_notification(user_id, email, beauty_salon_id, offer_id, description) {
+  async sendOfferNotification(userId: string, email: string, description: string, beauty_salon_id?: string) {
     const max_retries = 3;
     const retry_delay = 2;  // segundos
     let attempt = 0;
     while (attempt < max_retries) {
         try {
-            const subject = "New Offer Available";
-            const body = `Hello ${user_id},\n\nBeauty salon ${beauty_salon_id} has a new offer: ${description}.`;
+            // Recuperar la notificación almacenada para obtener username y salonName
+            const notifications = await this.notificationRepository.findByUserAndType(userId, 'Offer');
+            
+            //const notification = notifications[0];
+            //const beauty_salon_id = notification.BeautySalonID;
+            const username = "notification.username";       // Usar 'username'
+            const salonName = "notification.salonName";   // Usar 'salonName'
+
+            const subject = "Nueva Oferta disponible";
+            const body = `Hola ${username},\n\n El local ${salonName} tiene una nueva oferta: ${description}.`;
             const command = new PublishCommand({
                 TopicArn: process.env.ARN,
                 Message: body,
@@ -143,9 +178,9 @@ export class NotificationManager {
                 }
             });
             const response = await this.sns_client.send(command);
-            // Actualizar el estado a 'Enviado' después de enviar la notificación
-            await this.updateNotificationStatus(user_id, 'Offer', beauty_salon_id, 'Enviado');
-            Logger.log(`Offer notification sent to ${user_id} and status updated.`);
+            // Actualizar el estado a 'Sent' después de enviar la notificación
+            await this.updateNotificationStatus(userId, 'Offer', beauty_salon_id, 'Sent');
+            Logger.log(`Offer notification sent to ${username} and status updated.`);
             return response;
         } catch (error) {
             attempt += 1;
@@ -155,26 +190,35 @@ export class NotificationManager {
                 await new Promise(resolve => setTimeout(resolve, retry_delay * 1000));
             } else {
                 // Actualizar el estado a 'Error' si hubo una excepción
-                await this.updateNotificationStatus(user_id, 'Offer', beauty_salon_id, 'Error');
+                //await this.updateNotificationStatus(userId, 'Offer', beauty_salon_id, 'Error');
                 return {"status": "error", "message": error.message};
             }
         }
     }
   }
 
-  async send_reminder_notification(email, user_id, beauty_salon_id, date, time_str, service) {
+  async sendReminderNotification(email: string, userId: string,date: string, timeStr: string, service: string, beauty_salon_id?: string) {
     const max_retries = 3;
     const retry_delay = 2;  // segundos
     let attempt = 0;
     while (attempt < max_retries) {
         try {
+            // Recuperar la notificación almacenada para obtener username y salonName
+            Logger.log(`\n🔍 Buscando notificación pendiente para ${userId}...`);
+            //const notifications = await this.notificationRepository.findByUserAndType(userId, 'Reminder');
+
+            /*const notification = notifications[0];
+            const beauty_salon_id = notification.beautySalonId; */
+            const username = "notification.username;   "  ;  // Usar 'username'
+            const salonName = "notification.salonName;";   // Usar 'salonName'
+
             Logger.log(`\n📤 Enviando recordatorio a ${email}:`);
-            Logger.log(`- Salón: ${beauty_salon_id}`);
+            Logger.log(`- Salón: ${salonName}`);
             Logger.log(`- Fecha: ${date}`);
-            Logger.log(`- Hora: ${time_str}`);
+            Logger.log(`- Hora: ${timeStr}`);
             
-            const subject = "Appointment Reminder";
-            const body = `Hello ${user_id},\n\nThis is a reminder for your appointment at beauty salon ${beauty_salon_id} on ${date} at ${time_str} for ${service}.`;
+            const subject = "Recordatorio de Cita";
+            const body = `Hola ${username},\n\n Este es un recordatorio de que tienes una cita en el local ${salonName} el ${date} a las ${timeStr} para ${service}.`;
             
             const command = new PublishCommand({
                 TopicArn: process.env.ARN,
@@ -196,7 +240,7 @@ export class NotificationManager {
             Logger.log(`- MessageId: ${response.MessageId}`);
             
             Logger.log("\n🔄 Actualizando estado en DynamoDB...");
-            await this.updateNotificationStatus(user_id, 'Reminder', beauty_salon_id, 'Enviado');
+            await this.updateNotificationStatus(userId, 'Reminder', beauty_salon_id, 'Sent');
             
             return response;
         } catch (error) {
@@ -207,16 +251,16 @@ export class NotificationManager {
                 await new Promise(resolve => setTimeout(resolve, retry_delay * 1000));
             } else {
                 Logger.log("❌ Se alcanzó el número máximo de reintentos para enviar el recordatorio.");
-                await this.updateNotificationStatus(user_id, 'Reminder', beauty_salon_id, 'Error');
+                //await this.updateNotificationStatus(userId, 'Reminder', beauty_salon_id, 'Error');
                 return {"status": "error", "message": error.message};
             }
         }
     }
   }
 
-  async updateNotificationStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pendiente' | 'Enviado' | 'Error') {
+  async updateNotificationStatus(userId: string, typeToBehavior: string, beautySalonId: string, status: 'Pending' | 'Sent' | 'Error') {
     try {
-      await this.notificationRepository.updateStatus(user_id, type_to_behavior, beauty_salon_id, status);
+      await this.notificationRepository.updateStatus(userId, typeToBehavior, beautySalonId, status);
       Logger.log(`✅ Estado actualizado exitosamente a '${status}'`);
     } catch (error) {
       Logger.log(`❌ Error actualizando estado: ${error}`);
@@ -224,10 +268,10 @@ export class NotificationManager {
     }
   }
 
-  async send_unsubscription_notification(email, user_id, beauty_salon_id) {
+  async sendUnsubscriptionNotification(email: string, userId: string, beautySalonId: string) {
     try {
-        const subject = "Unsubscription Confirmation";
-        const body = `Hello ${user_id},\n\nYou have successfully unsubscribed from beauty salon ${beauty_salon_id}.`;
+        const subject = "Confirmación de Desuscripción";
+        const body = `Hola ${userId},\n\n Te has desuscrito exitosamente del salon de belleza ${beautySalonId}.`;
         const command = new PublishCommand({
             TopicArn: process.env.ARN,
             Message: body,
@@ -250,13 +294,13 @@ export class NotificationManager {
     }
   }
 
-  async send_offer_notification_to_all_followers(beauty_salon_id: string, offer_id: string, description: string) {
+  async sendOfferNotificationToAllFollowers(beautySalonId: string, description: string) {
     try {
-      const followers = await this.notificationRepository.getFollowers(beauty_salon_id);
+      const followers = await this.notificationRepository.getFollowers(beautySalonId);
 
       for (const follower of followers) {
         const user_id = follower.UserID_TypeBehavior_BeautySalonID.split('#')[0];
-        await this.send_offer_notification(user_id, follower.Email, beauty_salon_id, offer_id, description);
+        await this.sendOfferNotification(user_id, follower.Email, description);
       }
 
       return { status: "success", message: "Notifications sent to all active followers" };
@@ -269,7 +313,7 @@ export class NotificationManager {
     try {
       const notifications = await this.notificationRepository.getRecentNotifications(type_behavior, beauty_salon_id);
 
-      Logger.log(`Encontradas ${notifications.length} notificaciones pendientes de tipo ${type_behavior}`);
+      Logger.log(`Encontradas ${notifications.length} notificaciones Pendings de tipo ${type_behavior}`);
       return notifications;
     } catch (error) {
       Logger.log(`Error getting recent notifications: ${error}`);

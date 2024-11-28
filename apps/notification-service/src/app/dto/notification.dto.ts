@@ -9,6 +9,10 @@ export class ResultDto {
   salonName: string;
 
   @IsString()
+  @IsNotEmpty()
+  username: string;
+
+  @IsString()
   @IsOptional()
   date?: string;
 
@@ -32,7 +36,7 @@ export class CreateNotificationDto {
 
   @IsString()
   @IsNotEmpty()
-  email: string;
+  Email: string; // Usar solo Email
 
   @IsEnum(['Subscription', 'Reminder', 'Offer'])
   typeBehavior: 'Subscription' | 'Reminder' | 'Offer';
@@ -44,8 +48,8 @@ export class CreateNotificationDto {
   @IsBoolean()
   active = true;
 
-  @IsEnum(['Pendiente', 'Enviado', 'Error'])
-  status: 'Pendiente' | 'Enviado' | 'Error' = 'Pendiente';
+  @IsEnum(['Pending', 'Sent', 'Error'])
+  status: 'Pending' | 'Sent' | 'Error' = 'Pending';
 
   @IsString()
   @IsOptional()
@@ -70,4 +74,16 @@ export class CreateNotificationDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  UserID_TypeBehavior_BeautySalonID: string;
+
+  @IsString()
+  Timestamp: string;
+
+  @IsString()
+  username: string; // Asegurarse de que coincida con el modelo
+
+  @IsString()
+  salonName: string; // Asegurarse de que coincida con el modelo
 }
