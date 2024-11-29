@@ -139,3 +139,7 @@ export class AdminManagerService implements OnModuleInit {
   }
 
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop

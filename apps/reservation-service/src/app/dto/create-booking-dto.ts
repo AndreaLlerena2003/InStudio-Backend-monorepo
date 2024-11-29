@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import {
     IsDate,
     IsNotEmpty,
@@ -34,6 +35,8 @@ import {
   }
   
 =======
+=======
+>>>>>>> origin/develop
 import { IsNotEmpty, IsString, IsNumber, IsDateString } from 'class-validator';
 
 export class CreateBookingDto {
@@ -53,4 +56,7 @@ export class CreateBookingDto {
   @IsNotEmpty()
   timeSlot: string;
 }
+<<<<<<< HEAD
 >>>>>>> f115753a002d0dace77d03d3b0cf2456f6d2827e
+=======
+>>>>>>> origin/develop

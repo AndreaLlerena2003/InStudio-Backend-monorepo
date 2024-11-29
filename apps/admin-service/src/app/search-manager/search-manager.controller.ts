@@ -14,7 +14,7 @@ interface SearchSalonsDto {
 export class SearchManagerController {
   constructor(private readonly searchManagerService: SearchManagerService) {}
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Post('search')
   async searchSalons(@Body() searchFilters: SearchSalonsDto) {
     const { name, categoryIds, subcategoryIds, minPrice, maxPrice } = searchFilters;

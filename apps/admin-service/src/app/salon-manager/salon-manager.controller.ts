@@ -1,11 +1,18 @@
+<<<<<<< HEAD
 import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
+=======
+import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Param, Logger, Patch, BadRequestException } from '@nestjs/common';
+>>>>>>> origin/develop
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { SalonManagerService } from './salon-manager.service';
 import { CreateSalonDto } from '../dto/create-salon-dto';
 import { Salon } from '@backend-in-studio/db-manager-admin';
+<<<<<<< HEAD
 import { MessagePattern } from '@nestjs/microservices';
+=======
+>>>>>>> origin/develop
 import { FileInterceptor , FilesInterceptor } from '@nestjs/platform-express';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
@@ -49,20 +56,23 @@ export class SalonManagerController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('get-salon-by-salonId')
-  async getSalonsBySalonId(@Body('salonId') salonid: number ): Promise<Salon> {
-    try {
-      const response = await this.salonManagerService.getSalonBySalonId(salonid);
-      if (!response) {
-        this.logger.log(`No salons found for admin ID`);
+  //@UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
+  @Get('get-salon-by-salonId/:salonId')
+    async getSalonsBySalonId(@Param('salonId') salonId: number): Promise<Salon> {
+      Logger.log(salonId);
+      try {
+        const response = await this.salonManagerService.getSalonBySalonId(salonId);
+        if (!response) {
+          this.logger.log(`No salons found for salon ID: ${salonId}`);
+        }
+        return response;
+      } catch (error) {
+        this.logger.error('Error fetching salons', error);
+        throw new InternalServerErrorException('Failed to fetch salons');
       }
-      return response;
-    } catch (error) {
-      this.logger.error('Error fetching salons', error);
-      throw new InternalServerErrorException('Failed to fetch salons');
     }
-  }
+
 
 
   @MessagePattern('get-salon-by-salonId-for-notification')

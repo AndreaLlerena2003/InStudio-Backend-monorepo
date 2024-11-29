@@ -89,8 +89,9 @@ export class SalonManagerService {
 
   async getSalonBySalonId(salon_id:number): Promise<Salon>{
     try{
+      console.log(salon_id)
       const salon = await this.salonService.findByPk(salon_id);
-      this.logger.log(`Found ${salon} salons for salon ID: ${salon_id}`);
+      this.logger.log(`Found ${salon} salons for salonz ID: ${salon_id}`);
       return salon;
     }catch(error){
       this.logger.error(`Error fetching salons for salon ID: ${salon_id}`, error);

@@ -7,7 +7,11 @@
   },
   "private": true,
   "dependencies": {
+<<<<<<< HEAD
     "@aws-sdk/client-dynamodb": "^3.699.0",
+=======
+    "@aws-sdk/client-dynamodb": "^3.687.0",
+>>>>>>> origin/develop
     "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sns": "^3.687.0",
     "@aws-sdk/client-sqs": "^3.699.0",
@@ -48,7 +52,7 @@
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "sequelize": "^6.37.4",
+    "sequelize": "^6.37.5",
     "sequelize-typescript": "^2.1.6",
     "uuid": "^11.0.3"
   },

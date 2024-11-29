@@ -84,4 +84,8 @@ export class AuthManagerController {
         await this.authManagerService.logout(response);
         response.sendStatus(200);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/develop
