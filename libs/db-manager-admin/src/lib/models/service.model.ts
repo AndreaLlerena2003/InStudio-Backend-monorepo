@@ -1,4 +1,6 @@
-import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement} from 'sequelize-typescript';
+import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Salon } from './salons.model';
+import { Subcategory } from './subcategory.model';  // Asegúrate de importar Subcategory
 
 @Table({
   tableName: 'services',
@@ -22,8 +24,21 @@ export class Service extends Model<Service> {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   declare photo: string;
-  
+
+  @ForeignKey(() => Subcategory)  
+  @Column
+  declare subcategoryId: number;
+
+  @ForeignKey(() => Salon)
+  @Column
+  declare salon_id: number;
+
+  @BelongsTo(() => Salon)
+  declare salon: Salon;
+
+  @BelongsTo(() => Subcategory)  
+  declare subcategory: Subcategory;
 }

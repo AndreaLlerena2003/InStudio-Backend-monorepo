@@ -26,7 +26,7 @@ export class UserManagerController {
 
     @UseGuards(JwtAuthGuard)
     @Get('get-user-data')
-    async getUserData(@Req() req: any): Promise<User> {
+    async getUserData(@Req() req: any): Promise<any> {
     const externalId = req.user?.userId;
     try {
       return await this.userManagerService.getUserData(externalId);
@@ -53,6 +53,23 @@ export class UserManagerController {
     }
     try {
         await this.userManagerService.updateUserName(userId, name);
+      } catch (error) {
+      if (error instanceof HttpException) {
+          throw error;
+      }
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-pasword')
+  async updateUserPassword(@Req() req: any,  @Body('newPassword') newPassword: string) {
+    const userId = req.user?.userId;
+    if (!newPassword) {
+      throw new BadRequestException('NewPassword is required');
+    }
+    try {
+        await this.userManagerService.updatePassword(newPassword,userId);
       } catch (error) {
       if (error instanceof HttpException) {
           throw error;

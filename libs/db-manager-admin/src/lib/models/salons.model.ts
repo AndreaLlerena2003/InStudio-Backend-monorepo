@@ -1,5 +1,6 @@
 import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement} from 'sequelize-typescript';
-
+import { HasMany } from 'sequelize-typescript';
+import { Service } from './service.model';
 @Table({
   tableName: 'salons',
   timestamps: true,
@@ -39,13 +40,32 @@ export class Salon extends Model<Salon> {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   declare profile_photo_url: string;
 
   @Column({
-    type: DataType.STRING,
-    allowNull: false,
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
   })
-  declare banner_photos_url: string;
+  declare banner_photos_url: string[];
+  
+  @Column({
+    type: DataType.JSON,
+    allowNull: false,
+    defaultValue: {
+      "Monday": [],
+      "Tuesday": [],
+      "Wednesday": [],
+      "Thursday": [],
+      "Friday": [],
+      "Saturday": []
+    },
+  })
+  declare schedule: {
+    [day: string]: string[];
+  };
+
+  @HasMany(() => Service)
+  declare services: Service[]; 
 }

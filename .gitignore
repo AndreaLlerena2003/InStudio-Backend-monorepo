@@ -48,4 +48,13 @@ Thumbs.db
 .env.development
 .env.production
 # ENV
-*/apps/notification-service/.env
+*/apps/notification-service/.env"apps/admin-service/.env" 
+
+# Ignore environment variable files
+*.env
+*.env.local
+*.env.*.local
+.env.development
+.env.production
+# ENV
+*/apps/notification-service/.env".env" 

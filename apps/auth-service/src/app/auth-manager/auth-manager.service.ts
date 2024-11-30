@@ -111,6 +111,8 @@ export class AuthManagerService {
         response.cookie('Authentication', token, {
             httpOnly: true,
             expires,
+            sameSite: 'none',
+            maxAge:  3600000,  
         });
     }
 
@@ -156,7 +158,37 @@ export class AuthManagerService {
 
         return { userId, role };
     }
+
+    async changePasswordByExternalId(external_id: string, newPassword: string) {
+        if (!newPassword || newPassword.trim().length < 6) {
+            throw new UnprocessableEntityException('Password must be at least 6 characters long.');
+        }
+        const user = await this.authService.findOne({
+            where: { external_id },
+        });
+        if (!user) {
+            throw new UnauthorizedException('User not found.');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        return {
+            message: 'Password successfully changed.',
+        };
+    }
+
+    async getUserEmailByExternalId(userId: string) {
+        if (typeof userId !== 'string') {
+            throw new Error(`Invalid userId type. Expected string, received ${typeof userId}`);
+        }
+    
+        const user = await this.authService.findOne({
+            where: { external_id: userId },
+        });
+        return user.email;
+    }
+
+    async logout(response: Response) {
+        response.clearCookie('Authentication');
+    }
 }
-
-
-

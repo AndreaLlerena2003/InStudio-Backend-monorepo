@@ -1,18 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, InternalServerErrorException, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '@backend-in-studio/db-manager-user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import { S3Service } from 'libs/s3-manager/src/lib/s3-manager.service';
+import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs'; 
 @Injectable()
-export class UserManagerService {
+export class UserManagerService implements OnModuleInit {
     private readonly logger = new Logger();
     constructor(
         @InjectModel(User)
         private readonly userService: typeof User,
         private readonly kafkaService: KafkaService,
         private readonly s3Service: S3Service,
+        @Inject('auth-client') private readonly kafkaClient: ClientKafka
     ) {
+        
         this.kafkaService.init();
     }
 
@@ -54,18 +58,43 @@ export class UserManagerService {
                 this.logger.log(`User Found: ${JSON.stringify(user, null, 2)}`);
             } else {
                 this.logger.warn(`No user found for authentication: ${authentication}`);
+                throw new Error('User not found');
             }
-            return user;
+            let email: string;
+            try {
+                email = await firstValueFrom(
+                    this.kafkaClient.send('get_email', authentication),
+                );
+                this.logger.log(`Email retrieved successfully: ${email}`);
+            } catch (kafkaError) {
+                this.logger.debug('Raw Error Object:', kafkaError);
+                this.logger.error('Error during Kafka call for email', {
+                    message: kafkaError.message || kafkaError.toString(),
+                    stack: kafkaError.stack || null,
+                    details: JSON.stringify(kafkaError, null, 2),
+                });
+                throw new Error('Error fetching email from Kafka');
+            }
+            const {id ,name, profile_photo_url} = user.dataValues;
+            const userWithEmail = {
+                id,
+                name,
+                profile_photo_url,
+                email,
+            };
+            return userWithEmail;
         } catch (error) {
             this.logger.error('Error fetching user data', {
-                message: error.message,
-                stack: error.stack,
+                message: error.message || error.toString(),
+                stack: error.stack || null,
                 details: error,
             });
-    
-            throw new Error('Esto es una pruebita');
+            throw new Error(
+                `Error processing user data for authentication: ${authentication}. Details: ${error.message || error}`,
+            );
         }
     }
+    
 
     async updateUserName(authentication: string, name: string) {
         try {
@@ -109,6 +138,31 @@ export class UserManagerService {
             throw new InternalServerErrorException('Error updating profile photo');
         }
     }
+
+    async updatePassword(newPassword: string, authentication: string) {
+        try {
+            await this.kafkaService.sendEvent(
+                { newPassword, authentication },
+                'update-password'
+            );
+            return { message: 'Password update event sent successfully' };
+        } catch (error) {
+            this.logger.error('Error sending password update event:', error);
+            throw new Error('Failed to send password update event');
+        }
+    }
+
+    async onModuleInit() {
+        this.logger.log('Connecting to Kafka...');
+        try {
+            this.kafkaClient.subscribeToResponseOf('validate_user');
+            this.kafkaClient.subscribeToResponseOf('validate_user.reply');
+            await this.kafkaClient.subscribeToResponseOf('get_email');
+            this.logger.log('Connected to Kafka');
+        } catch (error) {
+            this.logger.error('Failed to connect to Kafka', error);
+        }
+      }
     
 
 }

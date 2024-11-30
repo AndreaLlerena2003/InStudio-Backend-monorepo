@@ -8,17 +8,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
-  app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
+  
   app.enableCors({
-    origin: 'http://localhost:3001',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: ['content-type', '*'],
+    origin: true,
     credentials: true,
   });
-  const port = process.env.PORT || 3000;
+  
+  app.connectMicroservice<MicroserviceOptions>(kafkaConfig);
   await app.startAllMicroservices();
-
+  const port = process.env.PORT || 3000;
   await app.listen(port);
+  
   Logger.log(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
   );
