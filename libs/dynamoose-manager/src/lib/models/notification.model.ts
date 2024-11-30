@@ -1,5 +1,5 @@
 import { Schema } from 'dynamoose';
-import { Item } from 'dynamoose/dist/Item';
+import { Item } from 'dynamoose';
 
 // Clase que extiende Item para el modelo
 export class Notification extends Item {
