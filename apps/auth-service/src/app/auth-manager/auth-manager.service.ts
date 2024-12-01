@@ -6,7 +6,7 @@ import {
     Injectable,
     UnauthorizedException,
     UnprocessableEntityException,
-  } from '@nestjs/common';
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import {JwtService} from '@nestjs/jwt';
 import { Response } from 'express';
@@ -100,7 +100,7 @@ export class AuthManagerService {
         response.cookie('Authentication', token, {
             httpOnly: true,
             expires,
-            sameSite: 'lax',
+            //sameSite: 'none',
             maxAge:  3600000,  
         });
     }
