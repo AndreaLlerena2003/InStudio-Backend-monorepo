@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { LocalStrategy } from '../strategies/local.strategy';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { KafkaManagerModule} from '@backend-in-studio/kafka-manager';
+//import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AuthLibModule } from '@backend-in-studio/auth-lib';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -21,6 +23,7 @@ import { KafkaManagerModule} from '@backend-in-studio/kafka-manager';
     }),
     SequelizeModule.forFeature([AuthTokens, AuthUsers]), 
     KafkaManagerModule,
+    AuthLibModule
   ],
   providers: [AuthManagerService, JwtStrategy, LocalStrategy],
   controllers: [AuthManagerController]
