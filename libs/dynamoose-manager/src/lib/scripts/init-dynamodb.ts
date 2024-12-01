@@ -1,9 +1,7 @@
-
 import * as AWS from 'aws-sdk';
 import * as dotenv from 'dotenv';
 import { Logger } from '@nestjs/common'; 
-
-dotenv.config();
+dotenv.config({ path: 'C:/Users/HP/Documents/Estudios/No-U/Lenguaje/Javascript/InStudio-Backend-monorepo/apps/notification-service/.env' });
 
 async function createNotificationTable() {
   const dynamodb = new AWS.DynamoDB({
@@ -22,7 +20,8 @@ async function createNotificationTable() {
       { AttributeName: 'UserID_TypeBehavior_BeautySalonID', AttributeType: 'S' },
       { AttributeName: 'Timestamp', AttributeType: 'S' },
       { AttributeName: 'TypeBehavior', AttributeType: 'S' },
-      { AttributeName: 'BeautySalonID', AttributeType: 'S' }
+      { AttributeName: 'BeautySalonID', AttributeType: 'S' },
+      { AttributeName: 'UserID', AttributeType: 'S' }
     ],
     GlobalSecondaryIndexes: [
       {
@@ -38,8 +37,23 @@ async function createNotificationTable() {
           ReadCapacityUnits: 5,
           WriteCapacityUnits: 5
         }
+      },
+      {
+        IndexName: 'UserID-TypeBehavior-index',
+        KeySchema: [
+          { AttributeName: 'UserID', KeyType: 'HASH' },
+          { AttributeName: 'TypeBehavior', KeyType: 'RANGE' }
+        ],
+        Projection: {
+          ProjectionType: 'ALL'
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5
+        }
       }
     ],
+    
     ProvisionedThroughput: {
       ReadCapacityUnits: 5,
       WriteCapacityUnits: 5
@@ -51,11 +65,12 @@ async function createNotificationTable() {
     Logger.log('Tabla creada exitosamente:', result);
     return result;
   } catch (error) {
-    if (error.code === 'ResourceInUseException') {
+    const awsError = error as AWS.AWSError;
+    if (awsError.code === 'ResourceInUseException') {
       Logger.log('La tabla ya existe');
     } else {
-      console.error('Error creando la tabla:', error);
-      throw error;
+      Logger.error('Error creando la tabla:', awsError);
+      throw awsError;
     }
   }
 }
