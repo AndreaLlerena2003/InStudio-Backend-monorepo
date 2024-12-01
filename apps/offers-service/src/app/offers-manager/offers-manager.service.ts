@@ -7,7 +7,24 @@ import { OfferType, Offers } from '../schemas/offer.schema';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-
+type Service = {
+    subcategoryId: number;
+    subcategoryName: string;
+    serviceId: number;
+    price: number;
+  };
+  
+type Category = {
+    categoryId: number;
+    categoryName: string;
+    services: Service[];
+  };
+  
+type Offer = {
+    salonId: number;
+    categories: Category[];
+  };
+  
 export class OfferWithPrice {
     constructor(
         public offersUUID: string,
@@ -76,7 +93,7 @@ export class OffersService implements OnModuleInit {
 
     async getOffersByServiceId(serviceId: number): Promise<OfferWithPrice[]> {
         this.logger.log(`Fetching offers for service ID: ${serviceId}`);
-        let offersData: any;
+        let offersData: { [key: number]: Offer };
         try {
             offersData = await firstValueFrom(
                 this.kafkaClient.send('get-offers-data', [serviceId])
@@ -90,19 +107,40 @@ export class OffersService implements OnModuleInit {
             });
             throw new Error('Error fetching offers data from Kafka');
         }
-    
+        this.logger.log(offersData);
         const offers = await this.offersRepository.find({ service_id: serviceId });
     
         if (!offers || offers.length === 0) {
             this.logger.warn(`No offers found for service ID: ${serviceId}`);
-            throw new NotFoundException(`No offers found for service ID: ${serviceId}`);
+            const offerData2 = Object.values(offersData);
+            console.log(offerData2[0].categories[0].services[0].price);
+            const offerDataPrice = offerData2[0].categories[0].services[0].price;
+            if (!offerDataPrice) {
+                throw new NotFoundException(`No offers or price data found for service ID: ${serviceId}`);
+            }
+            return [
+                new OfferWithPrice(
+                    null, 
+                    null, 
+                    null,
+                    null, 
+                    null, 
+                    null, 
+                    [serviceId],
+                    null, 
+                    null,
+                    null, 
+                    offerDataPrice,
+                )
+            ];
         }
-    
         this.logger.log(`Found ${offers.length} offers for service ID: ${serviceId}`);
+      //  this.logger.log(offers);
         const offersWithPrice = offers.map(offer => {
             const offerData = offer;
-            this.logger.log(offersData[serviceId]);
-            const offerDataPrice = offersData[serviceId]?.categories[0].services[0].price;
+            this.logger.log(offersData);
+            const offerDataPrice = offersData[offerData.salon_id]?.categories[0].services[0].price;
+            this.logger.log(offerDataPrice);
             let price: number = offerDataPrice;
     
             if (offerDataPrice) {
@@ -132,9 +170,8 @@ export class OffersService implements OnModuleInit {
                 offerData.bonoAmount,
                 price
             );
-          
         });
-        console.log(offersWithPrice);
+    
         return offersWithPrice;
     }
     
