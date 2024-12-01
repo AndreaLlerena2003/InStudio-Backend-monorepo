@@ -78,7 +78,6 @@ export class AnalyticsManagerService {
         service_name: serviceName,
         price: servicePrice,
       };
-      
       this.lambdaService.invokeLambda(payload);
       return {
         processedData: payload,
@@ -90,43 +89,6 @@ export class AnalyticsManagerService {
       };
     }
   }
-
-  // async processBookingEvent(bookingEventDto: BookingEventDto) {
-  //   Logger.log('🦆 Start processing reservation', bookingEventDto);
-  //   try {
-  //     const response$ = this.kafkaClient.send(
-  //       'get-all-services-for-analytics',
-  //       { salon_id: bookingEventDto.salon_id }
-  //     );
-  //     const response = await firstValueFrom(response$);
-  //     Logger.log('📥 Respuesta recibida desde Kafka:', response);
-
-  //     const payload = {
-  //       booking_id: bookingEventDto._id,
-  //       booking_date: new Date(
-  //         `${bookingEventDto.booking_date}T${bookingEventDto.time_slot}:00`
-  //       ),
-  //       status: bookingEventDto.status,
-  //       user_id: bookingEventDto.user_id,
-  //       salon_id: bookingEventDto.salon_id,
-  //       payment_id: bookingEventDto.payment_id,
-  //       service_id: bookingEventDto.service_id,
-  //       service_name: 'Corte de cabello',
-  //       price: 100,
-  //     };
-  //     Logger.log('Reservation created', JSON.stringify(payload));
-
-  //     // this.lambdaService.invokeLambda(bookingEventDto);
-  //     return {
-  //       processedData: payload,
-  //     };
-  //   } catch (error) {
-  //     Logger.error('🔴 Error al procesar el evento en Kafka:', error.message);
-  //     return {
-  //       processedData: 'ERROR: ' + error.message,
-  //     };
-  //   }
-  // }
 
   async getData(metricDto: MetricsDto) {
     try {
@@ -151,7 +113,6 @@ export class AnalyticsManagerService {
         const dateMatch = fileKey.match(/(\d{4}-\d{2}-\d{2})/); // Captura la fecha en el formato YYYY-MM-DD
         if (!dateMatch) return false;
         const fileDate = new Date(dateMatch[0]);
-        console.log(fileDate, startDate, endDate);
         return fileDate >= startDate && fileDate < endDate;
       });
 
@@ -208,7 +169,7 @@ export class AnalyticsManagerService {
                 // Convertir fecha al formato YYYY-MM-DD HH:MM:SS
                 return `'${value
                   .toISOString()
-                  .slice(0, 19)
+                  .slice(0, 10)
                   .replace('T', ' ')}'`;
               } else if (typeof value === 'string') {
                 // Escapar comillas simples en cadenas
@@ -231,9 +192,7 @@ export class AnalyticsManagerService {
           CAST(COUNT(*) AS INTEGER) AS total_quantity
         FROM parquet_data
         WHERE 
-          salon_id = ${salonId} AND
-          booking_date >= '${startDate.toISOString()}' AND 
-          booking_date <= '${temp_date.toISOString()}'
+          salon_id = ${salonId}
       `);
 
       const dailyResult = await connection.all(`
@@ -243,11 +202,9 @@ export class AnalyticsManagerService {
           SUM(price) AS amount
           FROM parquet_data
         WHERE 
-          salon_id = ${salonId} AND
-          booking_date >= '${startDate.toISOString()}' AND 
-          booking_date <= '${temp_date.toISOString()}'
-        GROUP BY date
-        ORDER BY date
+          salon_id = ${salonId} 
+          GROUP BY date
+          ORDER BY date
       `);
 
       // Formatear el resultado final
