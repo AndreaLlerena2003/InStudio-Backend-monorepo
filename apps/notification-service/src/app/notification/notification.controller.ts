@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Get, Logger } from '@nestjs/common';
+import { Controller, Post, Body, Get, Logger, Param, UseGuards, Request } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 
 @Controller('notifications')
 export class NotificationController {
@@ -31,11 +32,13 @@ export class NotificationController {
     return await this.notificationService.handleOffer(data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('subscribe')
   async subscribe(@Body() data: { email: string, userId: string }) {
     return this.notificationService.handleSubscription(data.email, data.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('send-reminder')
   async sendReminder(@Body() data: { 
     email: string, 
@@ -48,6 +51,7 @@ export class NotificationController {
     return this.notificationService.handleReminder(data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('send-offer')
   async sendOffer(@Body() data: {
     email: string,
@@ -59,18 +63,38 @@ export class NotificationController {
     return this.notificationService.handleOffer(data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('process-queue')
   async processQueue() {
     return this.notificationService.processNotificationQueue();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('queue-status')
   async getQueueStatus() {
     return this.notificationService.getQueueStatus();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('purge-queue')
   async purgeQueue() {
     return this.notificationService.purgeQueue();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user-notifications')
+  async getUserNotifications(@Request() req) {
+    const userId = req.user.userId;
+    const notifications = await this.notificationService.getUserNotifications(userId);
+    Logger.log('User notifications', JSON.stringify(notifications));
+    
+    // Aseguramos que notifications sea un array simple
+    const cleanNotifications = Array.isArray(notifications[0]) ? notifications[0] : notifications;
+    
+    return { 
+      success: true,
+      data: cleanNotifications,
+      message: 'Notifications retrieved successfully'
+    };
   }
 }
