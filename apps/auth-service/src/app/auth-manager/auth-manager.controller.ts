@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Res, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Res, Request, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthManagerService } from './auth-manager.service';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { RegisterAdminDto } from '../dto/register-admin.dto';
@@ -8,7 +8,7 @@ import { CurrentUser } from './current-user.decorator';
 import { Response } from 'express';
 import { AuthUsers } from '@backend-in-studio/db-manager-auth';
 import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
-import {JwtAuthGuard} from '@backend-in-studio/auth-lib';
+
 @Controller('auth-manager')
 export class AuthManagerController {
     constructor(
@@ -56,6 +56,24 @@ export class AuthManagerController {
         return response;
     }
 
+    //@UseGuards(JwtAuthGuard)
+    @Get('validate-session')
+    @HttpCode(HttpStatus.OK)
+    async validateSession(@Request() req) {
+        const token = req.cookies['Authentication'];
+        if (!token) {
+            return false;
+        }
+
+        try {
+            const data = { Authentication: token };
+            await this.authManagerService.validateToken(data, 0);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
     @MessagePattern('validate_admin')
     async validateAdmin(data: { Authentication: string }) {
         return this.authManagerService.validateToken(data, 1);
@@ -76,8 +94,6 @@ export class AuthManagerController {
             throw new Error('Failed to update password');
         }
     }
-
-
 
     @Post('logout')
     async logout(@Res({ passthrough: true }) response: Response) {
