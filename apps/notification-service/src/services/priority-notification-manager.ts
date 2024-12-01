@@ -169,4 +169,5 @@ export class PriorityNotificationManager extends NotificationManager {
         Logger.log(`⚠️ Tipo de notificación desconocido: ${notificationType}`);
     }
   }
+  
 }

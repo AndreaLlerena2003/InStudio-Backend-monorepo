@@ -16,6 +16,7 @@ export class Notification extends Item {
   ReminderID?: string;
   OfferID?: string;
   Description?: string;
+  UserID!: string;
 }
 
 // Schema para Dynamoose
@@ -42,13 +43,21 @@ export const NotificationSchema = new Schema(
       type: String,
       enum: ['Subscription', 'Reminder', 'Offer'],
       required: true,
-      index: {
-        name: 'TypeBehavior-BeautySalonID-index',
-        type: 'global',
-        rangeKey: 'BeautySalonID',
-        project: true,
-        throughput: { read: 5, write: 5 }
-      }
+      index: [
+        {
+          name: 'TypeBehavior-BeautySalonID-index',
+          type: 'global',
+          rangeKey: 'BeautySalonID',
+          project: true,
+          throughput: { read: 5, write: 5 }
+        },
+        {
+          name: 'UserID-TypeBehavior-index',
+          type: 'global',
+          project: true,
+          throughput: { read: 5, write: 5 }
+        }
+      ]
     },
     BeautySalonID: {
       type: String,
@@ -64,6 +73,17 @@ export const NotificationSchema = new Schema(
       enum: ['Pendiente', 'Enviado', 'Error'],
       required: true,
       default: 'Pendiente'
+    },
+    UserID: {
+      type: String,
+      required: true,
+      index: {
+        name: 'UserID-TypeBehavior-index',
+        type: 'global',
+        rangeKey: 'TypeBehavior',
+        project: true,
+        throughput: { read: 5, write: 5 }
+      }
     },
 
     // Atributos opcionales
