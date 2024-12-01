@@ -43,12 +43,12 @@ export class BookingService implements OnModuleInit{
         try {
             console.log('[JwtAuthGuard] Subscribing to Kafka topics...');
             await this.authClient.subscribeToResponseOf('validate_user');
-            await this.authClient.subscribeToResponseOf('validate_user.reply'); // Add explicit subscription for reply topic
+            await this.authClient.subscribeToResponseOf('validate_user.reply'); 
             console.log('[JwtAuthGuard] Subscribed to Kafka topics successfully');
 
             console.log('[JwtAuthGuard] Connecting to Kafka...');
-            await this.authClient.connect(); // Ensure the Kafka cient is connected
-            //this.authClient.subscribeToResponseOf('validate_user');
+            await this.authClient.connect(); 
+
             await this.kafkaClient.subscribeToResponseOf('get-booking-data');
             await this.kafkaClient.subscribeToResponseOf('get-booking-data.reply');
             await this.kafkaClient.connect();
@@ -225,8 +225,7 @@ export class BookingService implements OnModuleInit{
             offerData = await firstValueFrom(
                 this.offersClient.send('get-offer-data-by-service', service_id) 
             );
-    
-            // Si offerData no contiene datos, lo manejamos
+
             if (offerData && offerData.length > 0) {
                 totalPrice = offerData[0].price;
             } else {
@@ -239,7 +238,6 @@ export class BookingService implements OnModuleInit{
                 stack: kafkaError.stack || null,
                 details: JSON.stringify(kafkaError, null, 2),
             });
-            // Continuar sin precio si hay un error con Kafka
             this.logger.warn('Proceeding with booking despite Kafka error.');
         }
     
@@ -250,7 +248,7 @@ export class BookingService implements OnModuleInit{
             salon_id,
             date,
             timeSlot,
-            ...(totalPrice !== null && { totalPrice }) // Agregar totalPrice solo si está disponible
+            ...(totalPrice !== null && { totalPrice }) 
         };
     
         try {
