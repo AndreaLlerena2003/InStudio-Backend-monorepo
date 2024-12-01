@@ -6,8 +6,7 @@ import { AuthLibModule } from '@backend-in-studio/auth-lib';
 import { MongooseManagerModule } from '@backend-in-studio/mongoose-manager';
 import { MongooseModule } from '@nestjs/mongoose';
 import { KafkaManagerService } from './kafka.init.service';
-import { Booking, BookingSchema } from '../schemas/booking.schema';
-import { Availability, AvailabilitySchema } from '../schemas/availability.schema';
+import { Offers, OffersSchema } from '../schemas/offer.schema';
 import * as Joi from 'joi';
 import { ConfigModule } from '@nestjs/config';
 
@@ -26,8 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthLibModule,
     MongooseManagerModule,
     MongooseModule.forFeature([
-        { name: Booking.name, schema: BookingSchema, collection: 'booking_collection' },
-        { name: Availability.name, schema: AvailabilitySchema, collection: 'availability_collection' },
+        { name: Offers.name, schema: OffersSchema, collection: 'offers_collection' }
     ]),
     ClientsModule.register([
       {
@@ -35,55 +33,32 @@ import { ConfigModule } from '@nestjs/config';
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'client-reservation-service',
-<<<<<<< HEAD
+            clientId: 'client-offers-service',
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'backend-InStudio-auth-service',
-=======
-            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], 
-          },
-          consumer: {
-            groupId: 'backend-InStudio-auth-service-andrea',
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
-      {
-        name: 'admin-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'client-reservation-service',
-            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], // Use env var
-          },
-          consumer: {
-            groupId: 'backend-InStudio-admin-service-andreasss',
-            allowAutoTopicCreation: true,
-          },
-        },
-      },
-      {
-        name: 'offers-client',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'client-reservation-service',
-            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'], // Use env var
-          },
-          consumer: {
-            groupId: 'backend-InStudio-offers-service-andreasss',
->>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
+            groupId: 'backend-InStudio-auth-service-flavio',
             allowAutoTopicCreation: true,
           },
         },
       },
     ]),
-<<<<<<< HEAD
-=======
-    
->>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
+    ClientsModule.register([
+      {
+        name: 'admin-client',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'client-offers-service',
+            brokers: ['localhost:9092'],
+          },
+          consumer: {
+            groupId: 'backend-InStudio-admin-service-2',
+            allowAutoTopicCreation: true,
+          },
+        },
+      },
+    ]),
   ],
   providers: [KafkaManagerService],
   exports: [

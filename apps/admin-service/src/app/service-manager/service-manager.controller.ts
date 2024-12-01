@@ -1,10 +1,18 @@
-import { UseGuards ,Controller, Post, Body, Get, HttpCode, HttpStatus, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { UseGuards ,Patch ,Controller, Post, Body, Get, HttpCode, HttpStatus, BadRequestException ,HttpException ,NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service-dto';
 import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
 import { MessagePattern } from '@nestjs/microservices';
+<<<<<<< HEAD
+=======
+import { UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadedFile } from '@nestjs/common';
+
+
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
 class GetServicesBySalonDto {
   salon_id: number;
 }
@@ -58,7 +66,11 @@ export class ServiceController {
     // return await this.serviceManagerService.getAllServices();
   }
 
+<<<<<<< HEAD
   @UseGuards(JwtAuthGuard)
+=======
+  //@UseGuards(JwtAuthGuard)
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
   @Post('get-services-by-salon')
   async getServicesBySalonId(@Body() body: GetServicesBySalonDto): Promise<Service[]> {
     const { salon_id } = body;
@@ -92,4 +104,38 @@ export class ServiceController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-photo')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateUserProfilePhoto(@Body('serviceId') serviceId , @UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Profile photo file is required');
+    }
+
+    try {
+      const updatedPhotoInfo = await this.serviceManagerService.updateUserProfilePhoto(serviceId, file);
+      
+      return {
+        message: 'Profile photo updated successfully',
+        photoInfo: updatedPhotoInfo, 
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @MessagePattern('get-offers-data')
+  async getDataForOffers(serviceIds: number[]) {
+      return await this.serviceManagerService.getServicesIdData(serviceIds);
+  }
+
+
+  @MessagePattern('get-booking-data')
+  async getDataForBooking(data: Array<{ salon_id: number, service_id: number }>) {
+      return await this.serviceManagerService.getalonAndServiceDataById(data);
+  }
+  
 }

@@ -1,12 +1,24 @@
+<<<<<<< HEAD
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+=======
+import { Injectable, Logger, NotFoundException, Inject, OnModuleInit } from '@nestjs/common';
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
 import { BookingRepository } from './booking.repository';
 import { AvailabilityService } from '../availability-manager/availability.service';
 import { KafkaService } from 'libs/kafka-manager/src/lib/kafka-service';
 import {SQSService} from '../infraestructure/sqs.service';
 import { randomUUID, UUID } from 'crypto';
+<<<<<<< HEAD
 
 @Injectable()
 export class BookingService {
+=======
+import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable()
+export class BookingService implements OnModuleInit{
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
 
     private readonly logger = new Logger(BookingService.name);
 
@@ -14,7 +26,14 @@ export class BookingService {
         private readonly bookingRepository: BookingRepository,
         private readonly availabilityService: AvailabilityService,
         private readonly kafkaService: KafkaService,
+<<<<<<< HEAD
         private readonly sqsService: SQSService
+=======
+        private readonly sqsService: SQSService,
+        @Inject('admin-client') private readonly kafkaClient: ClientKafka,
+        @Inject('auth-client') private readonly authClient: ClientKafka,
+        @Inject('offers-client') private readonly offersClient: ClientKafka,
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
     ) {
         this.kafkaService.init();
     }
@@ -33,6 +52,113 @@ export class BookingService {
         }
     }
 
+<<<<<<< HEAD
+=======
+    
+    async onModuleInit() {
+        try {
+            console.log('[JwtAuthGuard] Subscribing to Kafka topics...');
+            await this.authClient.subscribeToResponseOf('validate_user');
+            await this.authClient.subscribeToResponseOf('validate_user.reply'); // Add explicit subscription for reply topic
+            console.log('[JwtAuthGuard] Subscribed to Kafka topics successfully');
+
+            console.log('[JwtAuthGuard] Connecting to Kafka...');
+            await this.authClient.connect(); // Ensure the Kafka cient is connected
+            //this.authClient.subscribeToResponseOf('validate_user');
+            await this.kafkaClient.subscribeToResponseOf('get-booking-data');
+            await this.kafkaClient.subscribeToResponseOf('get-booking-data.reply');
+            await this.kafkaClient.connect();
+
+            await this.offersClient.subscribeToResponseOf('get-offer-data-by-service');
+            await this.offersClient.subscribeToResponseOf('get-offer-data-by-service.reply');
+            await this.offersClient.connect();
+        } catch (error) {
+            console.error('Failed to connect to Kafka', error);
+        }
+    }
+
+
+    async getAllBookingsByUserId(user_id: string) {
+        try {
+            const filterQuery = { user_id };
+            const bookings = await this.bookingRepository.find(filterQuery);
+    
+            if (bookings.length === 0) {
+                this.logger.warn(`No bookings found for user with ID: ${user_id}`);
+                return [];  
+            }
+            const salonServiceDataPromises = bookings.map(async (booking) => {
+                const salon_id = booking.salon_id; 
+                const service_id = booking.service_id; 
+    
+                try {
+                    const salonServiceData = await firstValueFrom(
+                        this.kafkaClient.send('get-booking-data', [{ salon_id, service_id }]) 
+                    );
+    
+                    return {
+                        booking,            
+                        salonServiceData, 
+                    };
+                } catch (kafkaError) {
+                    this.logger.debug('Raw Error Object:', kafkaError);
+                    this.logger.error('Error during Kafka call for salon and service data', {
+                        message: kafkaError.message || kafkaError.toString(),
+                        stack: kafkaError.stack || null,
+                        details: JSON.stringify(kafkaError, null, 2),
+                    });
+                    throw new Error('Error fetching salon and service data from Kafka');
+                }
+            });
+            const result = await Promise.all(salonServiceDataPromises);
+            return result;
+        } catch (error) {
+            this.logger.error(`Error fetching bookings for user ID: ${user_id}`, error.stack);
+            throw new Error(`Unable to retrieve bookings for user ID: ${user_id}`);
+        }
+    }    
+
+    async getBookingByBookingUUID(bookingUUID: string) {
+        try {
+          
+            const filterQuery = { bookingUUID };
+            const result = await this.bookingRepository.findOne(filterQuery);
+    
+            if (!result) {
+                this.logger.warn(`No booking found for bookingUUID: ${bookingUUID}`);
+                throw new NotFoundException(`No booking found for bookingUUID: ${bookingUUID}`);
+            }
+    
+            const salon_id = result.salon_id; 
+            const service_id = result.service_id;  
+    
+            let salonServiceData: any;
+            try {
+                salonServiceData = await firstValueFrom(
+                    this.kafkaClient.send('get-booking-data', [{ salon_id, service_id }]) 
+                );
+            } catch (kafkaError) {
+                this.logger.debug('Raw Error Object:', kafkaError);
+                this.logger.error('Error during Kafka call for salon and service data', {
+                    message: kafkaError.message || kafkaError.toString(),
+                    stack: kafkaError.stack || null,
+                    details: JSON.stringify(kafkaError, null, 2),
+                });
+                throw new Error('Error fetching salon and service data from Kafka');
+            }
+
+            return {
+                booking: result,     
+                salonServiceData,    
+            };
+    
+        } catch (error) {
+            this.logger.error(`Error fetching booking for bookingUUID: ${bookingUUID}`, error.stack);
+            throw new Error(`Unable to retrieve booking for bookingUUID: ${bookingUUID}`);
+        }
+    }
+    
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
     async updateAsCompleted(bookingUUID: string) {
         const filterQuery = { bookingUUID };
         const updateData = { status: 'COMPLETED' };
@@ -92,6 +218,10 @@ export class BookingService {
                         booking_date: bookingRequest.date,
                         time_slot: bookingRequest.timeSlot,
                         status: 'PENDING_TO_PAY',
+<<<<<<< HEAD
+=======
+                        totalPrice: bookingRequest.totalPrice
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
                       });
             
                       this.logger.log(`Booking successfully created for user ${bookingRequest.user_id}`);
@@ -108,6 +238,34 @@ export class BookingService {
 
     async generateBooking(user_id: string, service_id: number, salon_id: number, date: string, timeSlot: string) {
         const bookingUUID = randomUUID();
+<<<<<<< HEAD
+=======
+        let offerData: any;
+        let totalPrice: number | null = null;
+    
+        try {
+            offerData = await firstValueFrom(
+                this.offersClient.send('get-offer-data-by-service', service_id) 
+            );
+    
+            // Si offerData no contiene datos, lo manejamos
+            if (offerData && offerData.length > 0) {
+                totalPrice = offerData[0].price;
+            } else {
+                this.logger.warn(`No offer data returned for service ID ${service_id}. Proceeding without pricing.`);
+            }
+        } catch (kafkaError) {
+            this.logger.debug('Raw Error Object:', kafkaError);
+            this.logger.error('Error during Kafka call for salon and service data', {
+                message: kafkaError.message || kafkaError.toString(),
+                stack: kafkaError.stack || null,
+                details: JSON.stringify(kafkaError, null, 2),
+            });
+            // Continuar sin precio si hay un error con Kafka
+            this.logger.warn('Proceeding with booking despite Kafka error.');
+        }
+    
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
         const messageBody = {
             bookingUUID,
             user_id,
@@ -115,16 +273,28 @@ export class BookingService {
             salon_id,
             date,
             timeSlot,
+<<<<<<< HEAD
+=======
+            ...(totalPrice !== null && { totalPrice }) // Agregar totalPrice solo si está disponible
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
         };
     
         try {
             await this.sqsService.sendMessage(messageBody);
             this.logger.log(`Booking request queued for user ${user_id} at salon ${salon_id}`);
+<<<<<<< HEAD
             
             return {
                 body: {bookingUUID: bookingUUID},
                 message: 'Booking request received and is being processed.',
                 status: 'PENDING', 
+=======
+    
+            return {
+                body: { bookingUUID },
+                message: 'Booking request received and is being processed.',
+                status: 'PENDING',
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
             };
         } catch (error) {
             this.logger.error('Error queuing booking request:', error);

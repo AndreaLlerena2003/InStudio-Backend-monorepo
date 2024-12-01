@@ -23,7 +23,7 @@ export class CreateSalonDto {
 
   @IsString()
   @IsOptional()
-  banner_photos_url: string;
+  banner_photos_url: string[];
 
   @IsNumber()
   @IsOptional()

@@ -29,6 +29,13 @@ export class Booking extends AbstractDocument {
 
   @Prop({ default: uuidv4 })  
   bookingUUID?: string;  
+<<<<<<< HEAD
+=======
+
+  @Prop()
+  @Optional()
+  totalPrice?: number;
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

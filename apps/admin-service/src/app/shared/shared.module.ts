@@ -31,7 +31,35 @@ import { ScheduleModule } from '@nestjs/schedule';
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'backend-InStudio-auth-service',
+            groupId: 'backend-InStudio-auth-service-administrador-god',
+            allowAutoTopicCreation: true,
+          },
+        },
+      },
+      {
+        name: 'ANALYTICS_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'client-admin-service',
+            brokers: ['localhost:9092'],
+          },
+          consumer: {
+            groupId: 'banking-InStudio-analytics-service-group',
+            allowAutoTopicCreation: true,
+          },
+        },
+      },
+      {
+        name: 'ANALYTICS_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'client-admin-service',
+            brokers: ['localhost:9092'],
+          },
+          consumer: {
+            groupId: 'banking-InStudio-analytics-service-group',
             allowAutoTopicCreation: true,
           },
         },

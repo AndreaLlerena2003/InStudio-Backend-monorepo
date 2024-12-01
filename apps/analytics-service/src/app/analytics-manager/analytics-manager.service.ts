@@ -78,7 +78,6 @@ export class AnalyticsManagerService {
         service_name: serviceName,
         price: servicePrice,
       };
-
       this.lambdaService.invokeLambda(payload);
       return {
         processedData: payload,

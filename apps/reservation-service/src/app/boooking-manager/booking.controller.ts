@@ -53,6 +53,34 @@ export class BookingController {
     }
   }
 
+<<<<<<< HEAD
+=======
+  @UseGuards(JwtAuthGuard)
+  @Get('/get-bookings-by-user-id')
+  async getBookingsByUserId(@Req() req: any) {
+    const user_id = req.user?.userId;
+    try {
+      const bookings = await this.bookingService.getAllBookingsByUserId(user_id);
+      return bookings;
+    } catch (error) {
+      this.logger.error('Getting bookings:', error.message);
+      throw error;
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/get-bookings-by-bookingUUID')
+  async getBookingsByBookingUUID(@Body('bookingUUID') bookingUUID: string) {
+    try {
+      const bookings = await this.bookingService.getBookingByBookingUUID(bookingUUID);
+      return bookings;
+    } catch (error) {
+      this.logger.error('Getting bookings:', error.message);
+      throw error;
+    }
+  }
+
+>>>>>>> 78369003815ae6265e7f267df3c735e1d2055cfb
   @Cron(CronExpression.EVERY_WEEK) 
   async verifyAndUpdateAllBookingStatus() {
     try {

@@ -1,4 +1,5 @@
-import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement, HasMany } from 'sequelize-typescript';
+import { Subcategory } from './subcategory.model'; 
 
 @Table({
   tableName: 'categories',
@@ -7,10 +8,10 @@ import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement } from 'seque
 export class Category extends Model<Category> {
   @PrimaryKey
   @AutoIncrement
-    @Column({
-      type: DataType.INTEGER,
-      allowNull: false,
-    })
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
   declare id: number;
 
   @Column({
@@ -24,4 +25,7 @@ export class Category extends Model<Category> {
     allowNull: false,
   })
   declare description: string;
+
+  @HasMany(() => Subcategory, { as: 'subcategories' })
+  declare subcategories: Subcategory[];
 }
