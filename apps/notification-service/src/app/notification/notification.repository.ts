@@ -19,6 +19,7 @@ export type INotification = {
   ReminderID?: string;
   OfferID?: string;
   Description?: string;
+  UserID?: string;
 };
 
 @Injectable()
@@ -28,7 +29,7 @@ export class NotificationRepository {
   constructor(
     @InjectModel('Notification')
     private notificationModel: Model<Notification>
-  ) {}
+  ) { }
 
   async create(notificationDto: CreateNotificationDto): Promise<INotification> {
     const timestamp = new Date().toISOString();
@@ -47,7 +48,8 @@ export class NotificationRepository {
       Service: notificationDto.service,
       ReminderID: notificationDto.reminderId,
       OfferID: notificationDto.offerId,
-      Description: notificationDto.description
+      Description: notificationDto.description,
+      UserID: notificationDto.userId
     };
 
     return this.notificationModel.create(notificationData);
@@ -55,7 +57,7 @@ export class NotificationRepository {
 
   async findByUserAndType(userId: string, type: string) {
     return this.notificationModel
-      .query('UserID_TypeBehavior_BeautySalonID')
+      .scan('UserID_TypeBehavior_BeautySalonID')
       .beginsWith(`${userId}#${type}`)
       .exec();
   }
@@ -63,10 +65,8 @@ export class NotificationRepository {
   async updateStatus(user_id: string, type_to_behavior: string, beauty_salon_id: string, status: 'Pendiente' | 'Enviado' | 'Error') {
     const user_key = `${user_id}#${type_to_behavior}#${beauty_salon_id}`;
     const [notification] = await this.notificationModel
-      .query('UserID_TypeBehavior_BeautySalonID')
+      .scan('UserID_TypeBehavior_BeautySalonID')
       .eq(user_key)
-      .sort('descending')
-      .limit(1)
       .exec();
 
     if (notification) {
@@ -83,44 +83,41 @@ export class NotificationRepository {
 
   async findRecentByTypeAndSalon(type_behavior: string, beauty_salon_id: string) {
     return this.notificationModel
-      .query('TypeBehavior')
+      .scan()
+      .where('TypeBehavior')
       .eq(type_behavior)
       .where('BeautySalonID')
       .eq(beauty_salon_id)
-      .filter('Status')
+      .where('Status')
       .eq('Pendiente')
-      .and()
-      .filter('Active')
+      .where('Active')
       .eq(true)
-      .using('TypeBehavior-BeautySalonID-index')
       .exec();
   }
 
   async getFollowers(beauty_salon_id: string) {
     return this.notificationModel
-      .query('TypeBehavior')
+      .scan()
+      .where('TypeBehavior')
       .eq('Subscription')
       .where('BeautySalonID')
       .eq(beauty_salon_id)
-      .filter('Active')
+      .where('Active')
       .eq(true)
       .exec();
   }
 
   async getRecentNotifications(type_behavior: string, beauty_salon_id: string) {
     return this.notificationModel
-      .query('TypeBehavior')
+      .scan()
+      .where('TypeBehavior')
       .eq(type_behavior)
       .where('BeautySalonID')
       .eq(beauty_salon_id)
-      .filter('Status')
+      .where('Status')
       .eq('Pendiente')
-      .and()
-      .filter('Active')
+      .where('Active')
       .eq(true)
-      .using('TypeBehavior-BeautySalonID-index')
-      .sort('descending')
-      .limit(10)
       .exec();
   }
 
@@ -135,8 +132,26 @@ export class NotificationRepository {
       // El UserID es la primera parte del UserID_TypeBehavior_BeautySalonID
       return notification.UserID_TypeBehavior_BeautySalonID.split('#')[0];
     }
-    
+
     this.logger.warn(`No se encontró usuario con el email: ${email}`);
     return null;
   }
+
+  async getLastFiveNotifications(userId: string): Promise<INotification[]> {
+    Logger.log(`Buscando notificaciones para el usuario ${userId}`);
+    
+    // Obtener todas las notificaciones del usuario (ofertas y recordatorios)
+    const notifications = await this.notificationModel
+      .scan('UserID_TypeBehavior_BeautySalonID')
+      .beginsWith(`${userId}#`)
+      .exec();
+
+    // Ordenar por timestamp y obtener las últimas 5
+    const lastFiveNotifications = notifications
+      .sort((a, b) => b.Timestamp.localeCompare(a.Timestamp))
+      .slice(0, 5);
+
+    return lastFiveNotifications as INotification[];
+  }
+
 }

@@ -29,7 +29,8 @@ import { NotificationSchema } from './models/notification.model';
         options: {
           throughput: { read: 5, write: 5 },
           create: true,
-          waitForActive: true
+          waitForActive: true,
+          // No es necesario especificar índices aquí si ya están definidos en el esquema
         },
       },
     ]),
