@@ -8,6 +8,7 @@ import { NotificationManager } from '../services/notification-manager';
 import { PriorityNotificationManager } from '../services/priority-notification-manager';
 import { DistributedPriorityQueue } from '../services/distributed-priority-queue';
 import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
+import { AuthLibModule } from '@backend-in-studio/auth-lib';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { KafkaManagerModule } from '@backend-in-studio/kafka-manager';
     }),
     KafkaManagerModule,
     DynamooseManagerModule,
-    NotificationModule
+    NotificationModule,
+    AuthLibModule
   ],
   controllers: [AppController],
   providers: [

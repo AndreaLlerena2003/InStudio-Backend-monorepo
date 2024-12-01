@@ -89,4 +89,25 @@ export class NotificationService {
     await this.priorityManager.purge();
     return { message: 'All queues purged successfully' };
   }
+
+  async getUserNotifications(userId: string): Promise<any[]> {
+    const notifications = await this.notificationRepository.getLastFiveNotifications(userId);
+  
+    // Supongamos que tenemos acceso a un servicio de usuarios para obtener el nombre
+    const userName = await this.getUserName(userId) || 'usuario';
+  
+    return notifications.map(notification => ({
+      userName,
+      description: notification.Description || '',
+      notificationType: notification.TypeBehavior,
+      date: notification.Date || '',
+      time: notification.Time || ''
+    }));
+  }
+  
+  private async getUserName(userId: string): Promise<string> {
+    // Implementar la lógica para obtener el nombre del usuario
+    // Por ejemplo, consultar un servicio de usuarios o una base de datos
+    return 'Nombre de Usuario'; // Placeholder
+  }
 }
