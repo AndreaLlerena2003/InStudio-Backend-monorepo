@@ -35,4 +35,28 @@ export class CheckAvailabilityController{
             );
         }
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('dates-check')
+    @HttpCode(HttpStatus.OK)
+    async checkDate(@Body() data: Partial<CheckAvailabilityDto>){
+        try{
+            const result = await this.availabilityService.getAllAvailabilityDatesForSalonId(data.salonId);
+            return {
+                statusCode: HttpStatus.OK,
+                message: 'Slots retrieved successfully',
+                data: result,
+            };
+        }catch(error){
+            this.logger.error(`Error fetching availability for salonId ${data.salonId}`, error.stack);
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Failed to fetch availability slots',
+                    error: error.message,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
 }
