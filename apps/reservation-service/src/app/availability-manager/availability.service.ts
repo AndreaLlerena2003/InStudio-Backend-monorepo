@@ -131,5 +131,30 @@ export class AvailabilityService {
         this.logger.log('Slot release successfully');
         return updatedAvailability;
     }
+
+
+    async getAllAvailabilityDatesForSalonId(salonId: number) {
+        this.logger.log(`Fetching available and unavailable dates for salon: ${salonId}`);
+        const availableSlots = await this.availabilityRepository.find({
+            salonId: salonId,
+            isAvailable: true,
+        });
+        const unavailableSlots = await this.availabilityRepository.find({
+            salonId: salonId,
+            isAvailable: false,
+        });
+
+        const availableDates = [...new Set(availableSlots.map((slot) => slot.date))];
+        let unavailableDates = [...new Set(unavailableSlots.map((slot) => slot.date))];
+        unavailableDates = unavailableDates.filter(date => !availableDates.includes(date));
+    
+        return {
+            isAvailable: availableDates,
+            notAvailable: unavailableDates,
+        };
+    }
+    
+    
+    
     
 }
