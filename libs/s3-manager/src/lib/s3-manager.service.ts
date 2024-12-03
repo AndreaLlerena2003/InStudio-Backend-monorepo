@@ -115,4 +115,25 @@ export class S3Service {
             throw new InternalServerErrorException('Failed to list files from S3');
         }
     }
+
+    async getFileStream(filePath: string): Promise<Readable> {
+        try {
+          const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: filePath,
+          });
+    
+          const { Body } = await this.s3Client.send(command);
+    
+          if (Body instanceof Readable) {
+            this.logger.log(`File stream retrieved successfully from S3: ${filePath}`);
+            return Body; 
+          } else {
+            throw new InternalServerErrorException('Failed to retrieve file stream from S3');
+          }
+        } catch (error) {
+          this.logger.error(`Error retrieving file stream from S3: ${error}`);
+          throw new InternalServerErrorException('Failed to retrieve file stream from S3');
+        }
+    }
 }
