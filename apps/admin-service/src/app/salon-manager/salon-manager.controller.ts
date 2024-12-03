@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Delete ,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Param, Logger, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Query , Body, Delete ,NotFoundException,Res,InternalServerErrorException,UploadedFile,UploadedFiles ,UseInterceptors, HttpException, HttpStatus, UseGuards, Req, Get, Param, Logger, Patch, BadRequestException } from '@nestjs/common';
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from '@backend-in-studio/auth-lib';
@@ -9,6 +9,8 @@ import { FileInterceptor , FilesInterceptor } from '@nestjs/platform-express';
 import { CreateWeeklyScheduleDto } from '../dto/add-schedule-dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import { Cron } from '@nestjs/schedule'; 
+import { Response } from 'express';
+
 @Controller('salon-manager')
 export class SalonManagerController {
   private readonly logger = new Logger();
@@ -95,6 +97,26 @@ export class SalonManagerController {
         throw error;
       }
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('profile-photo')
+  async getProfilePhoto(@Query('id') id: number, @Res() res: Response) {
+    try {
+      const salonImage = await this.salonManagerService.getProfilePhoto(id);
+      
+      if (!salonImage) {
+        throw new NotFoundException(`Profile photo not found for salon with ID ${id}`);
+      }
+      res.set({
+        'Content-Type': 'image/png',
+        'Content-Disposition': 'inline; filename="profile_photo.png"', 
+      });
+
+      salonImage.profilePhoto.pipe(res);
+    } catch (error) {
+      this.logger.error(`Error retrieving profile photo for salon with ID ${id}`, error);
+      throw new InternalServerErrorException('Error retrieving profile photo');
     }
   }
 

@@ -122,6 +122,29 @@ export class SalonManagerService {
     }
   }
 
+
+  async getProfilePhoto(id: number) {
+    try {
+      const salon = await this.salonService.findByPk(id);
+      if (!salon) {
+        throw new NotFoundException(`Salon with ID ${id} not found`);
+      }
+
+      if (!salon.profile_photo_url) {
+        throw new NotFoundException(`Profile photo for salon with ID ${id} not found`);
+      }
+      const photoStream = await this.s3Service.getFileStream(salon.profile_photo_url);
+      if (!photoStream) {
+        throw new NotFoundException(`Error retrieving profile photo from S3 for salon with ID ${id}`);
+      }
+      this.logger.log(`Successfully retrieved profile photo for salon with ID ${id}`);
+      return { profilePhoto: photoStream };
+    } catch (error) {
+      this.logger.error(`Error retrieving profile photo for salon with ID ${id}`, error);
+      throw new InternalServerErrorException('Error retrieving profile photo');
+    }
+  }
+
   async updateSalonBannerPhotos(id: string, files: Express.Multer.File[]) {
     try {
         const salon = await this.salonService.findByPk(id);
