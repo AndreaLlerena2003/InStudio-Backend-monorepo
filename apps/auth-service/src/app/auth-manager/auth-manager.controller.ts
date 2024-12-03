@@ -84,6 +84,11 @@ export class AuthManagerController {
         return await this.authManagerService.getUserEmailByExternalId(userId);
     }
 
+    @MessagePattern('get_email_admin')
+    async getEmailAdmin(userId: string) {
+        return await this.authManagerService.getUserEmailByExternalId(userId);
+    }
+ 
     @EventPattern('update-password')
     async handlePasswordUpdate(@Payload() payload: { newPassword: string, authentication: string }) {
         const { newPassword, authentication } = payload;
