@@ -1,11 +1,11 @@
-import { Controller, Post, Body, HttpException, HttpStatus, UseInterceptors ,UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
+import { NotFoundException,Res, InternalServerErrorException,Controller, Post, Body, HttpException, HttpStatus, UseInterceptors ,UseGuards, Req, Get, Logger, Patch, BadRequestException } from '@nestjs/common';
 import { AdminManagerService } from './admin-manager.service';
 import { Admin } from '@backend-in-studio/db-manager-admin'; 
 import { EventPattern, Payload } from '@nestjs/microservices';
 import {JwtAuthGuard} from '@backend-in-studio/auth-lib';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
-
+import { Response } from 'express';
 @Controller('admin-manager')
 export class AdminManagerController {
   private readonly logger = new Logger();
@@ -82,6 +82,27 @@ export class AdminManagerController {
         throw error;
       }
       throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile-photo')
+  async getProfilePhoto(@Req() req:any, @Res() res: Response) {
+    const adminId = req.user?.userId;
+    try {
+      const adminImage = await this.adminManagerService.getProfilePhoto(adminId);
+      if (!adminImage) {
+        throw new NotFoundException(`Profile photo not found for admin with ID ${adminId}`);
+      }
+      res.set({
+        'Content-Type': 'image/png',
+        'Content-Disposition': 'inline; filename="profile_photo.png"', 
+      });
+
+      adminImage.profilePhoto.pipe(res);
+    } catch (error) {
+      this.logger.error(`Error retrieving profile photo for admin with ID ${adminId}`, error);
+      throw new InternalServerErrorException('Error retrieving profile photo');
     }
   }
 
