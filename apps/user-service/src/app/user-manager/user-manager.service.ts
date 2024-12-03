@@ -152,6 +152,29 @@ export class UserManagerService implements OnModuleInit {
         }
     }
 
+
+    async getProfilePhoto(id: string) {
+        try {
+          const admin = await this.userService.findByPk(id);
+          if (!admin) {
+            throw new NotFoundException(`Salon with ID ${id} not found`);
+          }
+    
+          if (!admin.profile_photo_url) {
+            throw new NotFoundException(`Profile photo for salon with ID ${id} not found`);
+          }
+          const photoStream = await this.s3Service.getFileStream(admin.profile_photo_url);
+          if (!photoStream) {
+            throw new NotFoundException(`Error retrieving profile photo from S3 for admin with ID ${id}`);
+          }
+          this.logger.log(`Successfully retrieved profile photo for admin with ID ${id}`);
+          return { profilePhoto: photoStream };
+        } catch (error) {
+          this.logger.error(`Error retrieving profile photo for admin with ID ${id}`, error);
+          throw new InternalServerErrorException('Error retrieving profile photo');
+        }
+    }
+
     async onModuleInit() {
         this.logger.log('Connecting to Kafka...');
         try {

@@ -1,4 +1,4 @@
-import { UseGuards ,Patch ,Controller, Post, Body, Get, HttpCode, HttpStatus, BadRequestException ,HttpException ,NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { UseGuards ,Patch ,Query,Res, Controller, Post, Body, Get, HttpCode, HttpStatus, BadRequestException ,HttpException ,NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { CreateServiceDto } from '../dto/create-service-dto';
 import { Service } from '@backend-in-studio/db-manager-admin';
 import { ServiceManagerService } from './service-manager.service';
@@ -8,7 +8,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
-
+import { Response } from 'express';
 
 class GetServicesBySalonDto {
   salon_id: number;
@@ -129,6 +129,26 @@ export class ServiceController {
   @MessagePattern('get-booking-data')
   async getDataForBooking(data: Array<{ salon_id: number, service_id: number }>) {
       return await this.serviceManagerService.getalonAndServiceDataById(data);
+  }
+
+  @Get('profile-photo')
+  async getProfilePhoto(@Query('id') id: number, @Res() res: Response) {
+    try {
+      const salonImage = await this.serviceManagerService.getProfilePhoto(id);
+      
+      if (!salonImage) {
+        throw new NotFoundException(`Profile photo not found for salon with ID ${id}`);
+      }
+      res.set({
+        'Content-Type': 'image/png',
+        'Content-Disposition': 'inline; filename="profile_photo.png"', 
+      });
+
+      salonImage.profilePhoto.pipe(res);
+    } catch (error) {
+      this.logger.error(`Error retrieving profile photo for salon with ID ${id}`, error);
+      throw new InternalServerErrorException('Error retrieving profile photo');
+    }
   }
   
 }
