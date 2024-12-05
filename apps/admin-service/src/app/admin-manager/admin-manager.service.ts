@@ -20,8 +20,9 @@ export class AdminManagerService implements OnModuleInit {
   }
     async onModuleInit() {
         try {
-            await this.kafkaClient.subscribeToResponseOf('get_email');
+            await this.kafkaClient.subscribeToResponseOf('get_email_admin');
             this.logger.log('Connected to Kafka');
+            this.logger.log('get email admin topic');
         } catch (error) {
             this.logger.error('Failed to connect to Kafka', error);
         }
@@ -66,24 +67,11 @@ export class AdminManagerService implements OnModuleInit {
   
       this.logger.log(`Admin Found: ${JSON.stringify(admin, null, 2)}`);
   
-      let email: string;
-      try {
-        email = await firstValueFrom(this.kafkaClient.send('get_email', authentication));
-        this.logger.log(`Email retrieved successfully: ${email}`);
-      } catch (kafkaError) {
-        this.logger.error('Error fetching email from Kafka', {
-          message: kafkaError.message,
-          stack: kafkaError.stack,
-          details: kafkaError,
-        });
-        throw new InternalServerErrorException('Error retrieving email from Kafka');
-      }
       const { id, name, profile_photo_url } = admin.dataValues;
       const adminWithEmail = {
         id,
         name,
         profile_photo_url,
-        email,
       };
       return adminWithEmail;
     } catch (error) {
