@@ -39,8 +39,8 @@ export class SalonManagerService {
       this.logger.error('Error creating salon', error);
       throw new InternalServerErrorException('Failed to create salon');
     }
-  }  
-
+  }
+ 
   async getAllSalonsIdAndSchedulesAndSendToReservation() {
     try {
         const salons = await this.salonService.findAll({
@@ -318,6 +318,17 @@ async deleteSalonBannerPhoto(id: string, photoUrl: string) {
     }
   }
 
- 
+   
+  async getAllSalons(): Promise<Salon[]> {
+    try {
+      const salons = await this.salonService.findAll();
+      this.logger.log(`Found ${salons.length} salons`);
+      return salons;
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons') 
+  }};
+  
+
   
 }

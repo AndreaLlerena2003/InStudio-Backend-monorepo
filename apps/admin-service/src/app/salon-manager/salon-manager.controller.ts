@@ -50,6 +50,16 @@ export class SalonManagerController {
     }
   }
 
+  @Get('get-all')
+  async getAll(): Promise<Salon[]> {
+    try {
+      const response = await this.salonManagerService.getAllSalons();
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching salons', error);
+      throw new InternalServerErrorException('Failed to fetch salons');
+    }
+  }
   //@UseGuards(JwtAuthGuard)
   //@UseGuards(JwtAuthGuard)
   @Get('get-salon-by-salonId/:salonId')

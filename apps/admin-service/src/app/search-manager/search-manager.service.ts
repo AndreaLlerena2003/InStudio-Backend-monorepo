@@ -67,6 +67,7 @@ export class SearchManagerService {
     }
   
     const salons = await this.salonService.findAll(salonsQuery);
+    this.logger.log('Salons found', salons.length);
     const filteredSalons = salons.map((salon) => {
       const services = Array.isArray(salon.services) ? salon.services : [];
   

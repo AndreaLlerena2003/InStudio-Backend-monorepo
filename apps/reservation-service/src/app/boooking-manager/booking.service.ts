@@ -193,7 +193,7 @@ export class BookingService implements OnModuleInit{
                         
                         );
 
-                      await this.bookingRepository.create({
+                      const response = await this.bookingRepository.create({
                         bookingUUID: bookingRequest.bookingUUID,
                         user_id: bookingRequest.user_id,
                         service_id: bookingRequest.service_id,
@@ -203,6 +203,8 @@ export class BookingService implements OnModuleInit{
                         status: 'PENDING_TO_PAY',
                         totalPrice: bookingRequest.totalPrice
                       });
+
+                      this.kafkaService.sendEvent(response, 'reservation-created');
             
                       this.logger.log(`Booking successfully created for user ${bookingRequest.user_id}`);
                 }catch(error){
